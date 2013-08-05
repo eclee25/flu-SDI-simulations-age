@@ -1,0 +1,6 @@
+*~
+*.[oa]
+*.py[cod]
+*.csv
+Data/
+Results/
