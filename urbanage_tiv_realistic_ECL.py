@@ -4,92 +4,52 @@
 #Employ age-based vaccine efficacies/effectivenesses
 #Compare AR to random antiviral treatment
 
-# Toddlers: 0-2
-# Preschool: 3-4
-# Children: 5-18
-# Adults: 19-64
-# Seniors: 65+ (community)
-# Elders: 65+ (nursing home)
-# There are only 94 "elders" in the Vancouver network, and they all reside in one nursing home, so they can generally be combined with the seniors for analysis purposes (all_elderly).
+# codebook of age class codes
+# '1' - Toddlers: 0-2
+# '2' - Preschool: 3-4
+# '3' - Children: 5-18
+# '4' - Adults: 19-64
+# '5' - Seniors: 65+ (community)
+# '6' - Elders: 65+ (nursing home)
+# There are only 94 "elders" in the Vancouver network, and they all reside in one nursing home, so they can be combined with the seniors for analysis purposes (all_elderly).
 
 ###### ECL changes ######
 # 7/22/13 ECL: descriptive comments
 # 7/24/13 ECL: calculateOR function
+# 8/5/13 ECL: start of major code reorganization
+###########################################
 
+
+### import packages and modules ###
 from networkx import *
 from random import *
 from pylab import mean, hist, show
+from collections import defaultdict
 import random as rnd
 import sys
-# sys.path.append('../../../../Models') # commented out ECL 7/22
 import pretty_print as gen
 
-#Add in age structure
-file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/urban_ages_Sarah.csv')
-# file has node number and age category
-ages = {}
-for line in file2:
-    new_line = line.split()
-    for line in new_line:
-        node, age = line.split(',')
-        ages[node] = age
 
-#Form lists of nodes in each age group
-toddlers_count = []
-preschool_count = []
-children_count = []
-adults_count = []
-seniors_count = []
-elders_count = []
-all_elderly_count = []
 
-for node in ages:
-    if ages[node] == '1':
-        toddlers_count.append(node)
-    elif ages[node] == '2':
-        preschool_count.append(node)
-    elif ages[node] == '3':
-        children_count.append(node)
-    elif ages[node] == '4':
-        adults_count.append(node)
-    elif ages[node] == '5':
-        seniors_count.append(node)
-    else:
-        elders_count.append(node)
-all_elderly_count = seniors_count + elders_count
-
-#Insert network
-file = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/urban_edges_Sarah.csv')
-G = Graph()
-for edge in file:
-    G.add_edge(*edge.strip().split(','))
-net_size = G.order()
-
-#Define percolation function
+### local functions ###
+# 1) percolation function
 def percolate(G,i,s):
-    states = dict([(node, 's') for node in G.nodes()])
-
+    # start of simulation
+    states = dict([(node, 's') for node in G.nodes()]) # all nodes are assigned 's' at start
     p_zero = choice(G.nodes()) # pick a random node as patient zero
-    states[p_zero] = 'i'
-    infected = [p_zero]
-    recovered = []
+    states[p_zero] = 'i' # assign infected state to patient zero
+    
+    # keep track of nodes that are infected and recovered during sim
+    infected, recovered = [p_zero],[]
+    
+    # keep track of nodes that have been infected by age group during sim
+    toddlers, preschool, children = [],[],[]
+    adults, seniors, elders, all_elderly = [],[],[],[]
 
-    toddlers = []
-    preschool = []
-    children = []
-    adults = []
-    seniors = []
-    elders = []
-    all_elderly = []
-
+    # keep track of vax nodes that have been infected by age group during sim
     protected = []
-    p_toddlers = []
-    p_preschool = []
-    p_children = []
-    p_adults = []
-    p_seniors = []
-    p_elders = []
-    p_all_elderly = []
+    p_toddlers, p_preschool, p_children = [],[],[]
+    p_adults, p_seniors, p_elders, p_all_elderly = [],[],[],[]
 
     while len(infected) > 0:
         v = infected.pop(0)
@@ -142,6 +102,49 @@ def percolate(G,i,s):
 def calculateOR(child_AR, adult_AR): # defined by ECL 7/23/13
     oddsratio = (child_AR/(1-child_AR))/(adult_AR/(1-adult_AR))
     return oddsratio
+
+
+### data structures ###
+d_node_age = {} # key = node number, value = age class code
+d_age_nodelist = defaultdict(list) # key = age class, value = list of nodes belonging to age class
+
+### data import ###
+## import Vancouver network
+file = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv')
+G = Graph()
+for edge in file:
+    G.add_edge(*edge.strip().split(','))
+net_size = G.order()
+
+##  import age structure
+file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv')
+# file has node number and age category
+
+for line in file2:
+    new_line = line.split()
+    for line in new_line:
+        node, age = line.split(',')
+        d_node_age[node] = age
+
+for node in d_node_age:
+    if d_node_age[node] == '1':
+        d_age_nodelist['toddlers'].append(node)
+    elif d_node_age[node] == '2':
+        d_age_nodelist['preschoolers'].append(node)
+    elif d_node_age[node] == '3':
+        d_age_nodelist['children'].append(node)
+    elif d_node_age[node] == '4':
+        d_age_nodelist['adults'].append(node)
+    elif d_node_age[node] == '5':
+        d_age_nodelist['seniors'].append(node) 
+        d_age_nodelist['all_elderly'].append(node)  
+    elif d_node_age[node] == '6':
+        d_age_nodelist['elders'].append(node)
+        d_age_nodelist['all_elderly'].append(node)
+
+
+
+
 
 #Run simulation for each T-value
 # tau = transmissibility
@@ -319,15 +322,6 @@ for reduction in reduction_list:
         e_elders = []
         e_all_elderly = []
 
-        low_symptom = []
-        ls_toddlers = []
-        ls_preschool = []
-        ls_children = []
-        ls_adults = []
-        ls_seniors = []
-        ls_elders = []
-        ls_all_elderly = []
-
         ar_vax = []
         #ar_age = []
         ar_vax_toddlers = []
@@ -363,14 +357,6 @@ for reduction in reduction_list:
                 ar_vax_adults.append(l)
                 ar_vax_allelderly.append(o)
                 #ar_age.append(m)
-            low_symptom.append(y)
-            ls_toddlers.append(h)
-            ls_preschool.append(j)
-            ls_children.append(k)
-            ls_adults.append(l)
-            ls_seniors.append(m)
-            ls_elders.append(n)
-            ls_all_elderly.append(o)
 
         #View results without saving to text files
         print 'Resulted in epidemic (%):', len(epidemics)/float(numsims)*100 # percentage of simulations that resulted in epidemics
@@ -482,7 +468,7 @@ for reduction in reduction_list:
         #print 'Average:'
         mean_calc_VE = (len(toddlers_count)*calc_VE_toddlers+len(preschool_count)*calc_VE_preschool+len(children_count)*calc_VE_children+
                         len(adults_count)*calc_VE_adults+len(all_elderly_count)*calc_VE_allelderly)/net_size
-        print "Vaccine effec. (% reduction in risk):", mean_calc_VE
+        print "overall vax effec. (%):", mean_calc_VE
         simulated_VE[(q,reduction)] = mean_calc_VE
         print '--------------------'
         print

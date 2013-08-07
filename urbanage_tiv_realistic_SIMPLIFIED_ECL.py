@@ -151,7 +151,7 @@ while len(scenarios) > 0:
     if q == 'seasonal': #Seasonal
         tau = 0.0643
         #tau = 0.0572
-        eff = 0.645
+        eff = 0.645 # reference value of weighted average of vax efficacy
         cov = 'Seasonal'
         #Age-based coverage levels
         #overall coverage = 0.245
@@ -268,9 +268,8 @@ while len(scenarios) > 0:
 
     epidemics, e_toddlers, e_preschool, e_children, e_adults, e_seniors, e_elders, e_all_elderly = [],[],[],[],[],[],[],[] # number of recovered for simulations that become epidemics (number of infecteds is over 515)
 
-    low_symptom, ls_toddlers, ls_preschool, ls_children, ls_adults, ls_seniors, ls_elders, ls_all_elderly = [],[],[],[],[],[],[],[] # number of recovered for among individuals who were vaccinated for all simulations
     
-    for i in range(500):
+	for i in range(500):
         z,a,b,c,d,e,f,g,y,h,j,k,l,m,n,o = percolate(G,i,s)
         results.append(z)
         r_toddlers.append(a)
@@ -289,14 +288,7 @@ while len(scenarios) > 0:
             e_seniors.append(e)
             e_elders.append(f)
             e_all_elderly.append(g)
-        low_symptom.append(y)
-        ls_toddlers.append(h)
-        ls_preschool.append(j)
-        ls_children.append(k)
-        ls_adults.append(l)
-        ls_seniors.append(m)
-        ls_elders.append(n)
-        ls_all_elderly.append(o)
+
 
     #View results without saving to text files
     print 'T:',tau
@@ -383,32 +375,6 @@ while len(scenarios) > 0:
     filename = 'realistic_TIV_allelderly_T%r_%s.txt'%(tau,cov)
     gen.print_list_to_file(l,filename)
 '''    
-'''
-    l = low_symptom
-    filename = 'realistic_TIV_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    
-    l = ls_toddlers
-    filename = 'realistic_TIV_toddlers_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    l = ls_preschool
-    filename = 'realistic_TIV_preschool_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    l = ls_children
-    filename = 'realistic_TIV_children_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    l = ls_adults
-    filename = 'realistic_TIV_adults_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    l = ls_seniors
-    filename = 'realistic_TIV_seniors_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    l = ls_elders
-    filename = 'realistic_TIV_elders_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-    l = ls_all_elderly
-    filename = 'realistic_TIV_allelderly_T%r_%s_ls.txt'%(tau,cov)
-    gen.print_list_to_file(l,filename)
-'''
+
 
 #Epidemic = more than 515 people infected
