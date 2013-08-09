@@ -10,9 +10,10 @@ from networkx import *
 from random import *
 from pylab import mean, hist, show
 import random as rnd
+from time import clock
 
 #Add in age structure
-file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/urban_ages_Sarah.csv')
+file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv')
 # file has node number and age category
 ages = {}
 for line in file2:
@@ -46,7 +47,7 @@ for node in ages:
 all_elderly_count = seniors_count + elders_count
 
 #Insert network
-file = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/urban_edges_Sarah.csv')
+file = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv')
 G = Graph()
 for edge in file:
     G.add_edge(*edge.strip().split(','))
@@ -313,8 +314,10 @@ for reduction in reduction_list:
         ar_vax_adults = []
         ar_vax_allelderly = []
 
-        for i in range(500):
+        for i in range(50):
+            start = clock()
             z,a,b,c,d,e,f,g,y,h,j,k,l,m,n,o = percolate(G,i,s)
+            print clock()-start, '\t', z
             results.append(z)
             r_toddlers.append(a)
             r_preschool.append(b)
