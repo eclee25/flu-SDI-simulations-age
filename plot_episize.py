@@ -79,7 +79,6 @@ for line in lines_cov:
 
 
 
-
 # sd for epidemics only
 d_cov_episize_sd = dict((k, np.std(d_cov_episize[k])) for k in d_cov_episize)
 
