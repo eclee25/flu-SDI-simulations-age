@@ -4,11 +4,11 @@
 ###Python template
 ###Author: Elizabeth Lee
 ###Date: 8/9/13
-###Function: 
+###Function: Diagnostic plots for simulations that were run before embedding diagnostics into the main code
 ## plot epidemic sizes and error bars to see amount of variation in sizes and determine if more than 1000 simulations are needed
 ###Import data: simresults_1000sims_T0.0-0.2_vax0.txt, simresults_1000sims_T0.065_vaxcov0.0-0.2.txt
 
-###Command Line: python 
+###Command Line: python plot_episize.py
 ##############################################
 
 

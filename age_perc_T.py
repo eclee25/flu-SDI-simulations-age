@@ -119,7 +119,7 @@ plt.errorbar(T_epi, [np.mean(d_epiOR[T]) for T in T_epi], yerr=[d_epiORsd[T] for
 plt.xlabel('T')
 plt.ylabel('OR, child:adult')
 plt.xlim([0, 0.25])
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_%ssims_T%s-%s_vax0.png'%(numsims, str(min(Tlist)), str(max(Tlist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_T_%ssims_T%s-%s_vax0.png'%(numsims, str(min(Tlist)), str(max(Tlist)))
 plt.savefig(figname)
 
 
