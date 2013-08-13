@@ -9,6 +9,7 @@
 #### separate epidemics from results
 #### calculate incidence of children and adults??
 #### random vax strategy
+#### vax efficacy perc function for age-structured networks
 #### gen perc function for age-structured networks
 
 ###Import data: 
@@ -54,23 +55,70 @@ def child_adult_size(dict_node_age):
 def epidemicsonly(dict_simresults, episize):
 	return dict((k, dict_simresults[k]) for k in dict_simresults.keys() if dict_simresults[k][2] > episize)
 
-###################################################
-# calculate incidence of children and adults 
-# won't return anything, dictionary items are added to an empty dictionary -- is this okay for readability? (not currently used in the main code)
-def child_adult_incid(dict_simepi, dict_epiincid, child_size, adult_size):
-	for key in dict_simepi:
-		dict_epiincid[(key[0], 'C')].append(dict_simepi[key][0]/child_size)
-		dict_epiincid[(key[0], 'A')].append(dict_simepi[key][1]/adult_size)
+# ###################################################
+# # calculate incidence of children and adults 
+# # won't return anything, dictionary items are added to an empty dictionary -- is this okay for readability? (not currently used in the main code)
+# def child_adult_incid(dict_simepi, dict_epiincid, child_size, adult_size):
+# 	for key in dict_simepi:
+# 		dict_epiincid[(key[0], 'C')].append(dict_simepi[key][0]/child_size)
+# 		dict_epiincid[(key[0], 'A')].append(dict_simepi[key][1]/adult_size)
 
 ####################################################
-# random vax strategy
+# random vax strategy with vaxcov% coverage and 100% efficacy
 def rnd_vax(G, vaxcov):
 	for n in G.nodes():
 		if rnd.random() < vaxcov:
 			G.remove_edges_from(G.edges(n))
 
 ####################################################
-# general age-structured percolation function (hybrid dict/list methods)
+# age structured percolation function with random vax strategy with vaxcov% coverage and defined susceptibility multiplier, where 1 is fully susceptible
+def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
+
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()])
+	p_zero = rnd.choice(G.nodes()) # Randomly choose one node as patient zero
+	states[p_zero] = 'i'
+	infected = [p_zero] 
+	recovered = [] 
+	vaccinated = []
+	
+	# define two vax coverage scenarios
+	if vaxcov_scen == 'Low':
+		vaxcov = 0.245
+	elif vaxcov_scen == 'High':
+		vaxcov = 0.455
+	else:
+		print "vaccine coverage scenario error"
+	
+	# identify vaccinated nodes
+	for n in G.nodes():
+		if rnd.random() < vaxcov and n != p_zero:
+			states[n] = 'v'
+			vaccinated.append(n)
+	
+	# simulation
+	while len(infected) > 0:
+		v = infected.pop(0)
+		for u in G.neighbors(v):
+			if states[u] == 's' and rnd.random() < T:
+				states[u] = 'i'
+				infected.append(u)
+			elif states[u] == 'v' and rnd.random() < T * susceptibility:
+				states[u] = 'i'
+				infected.append(u)
+		states[v] = 'r'
+		recovered.append(v)
+	
+	# infected children
+	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
+	# infected adults
+	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']) )
+	
+	# number recovered children, adults, and total pop, and number of initially vaccinated individuals
+	return rec_child_n, rec_adult_n, len(recovered), len(vaccinated)
+
+####################################################
+# general age-structured percolation function 
 def perc_age_gen(G, dict_node_age, T):
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -94,7 +142,7 @@ def perc_age_gen(G, dict_node_age, T):
 	# infected adults
 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']) )
 	
-	# return incidence in children and adults
+	# number recovered in children and adults and total
 	return rec_child_n, rec_adult_n, len(recovered)
 
 
