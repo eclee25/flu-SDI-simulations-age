@@ -45,7 +45,7 @@ d_epiORsd = {} # d_epiORsd[T] = sd of ORs across simulations that resulted in ep
 numsims = 4000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 vaxcovlist = np.linspace(0, .2, num=21, endpoint=True) # vax coverage
-Tcov = 0.065 # fixed T value for vax coverage simulations
+Tcov = 0.065 # ~20% AR in naive population
 
 
 ### import data ###
@@ -85,17 +85,19 @@ for cov in vaxcovlist:
 		d_simresults[(cov, num)] = perc.perc_age_gen(VG, d_node_age, Tcov) # value is tuple: (child_rec, adult_rec, total_rec)
 # 		print "simtime, simnum:", clock()-start, "\t", num
 
-
+##############################################
 ### calculate incidence for children and adults for each simulation that turned into an epidemic ###
 # # separate epidemics from all results
 d_simepi = perc.epidemicsonly(d_simresults, size_epi) 
 
 # calculate incidence of children and adults
 for key in d_simepi.keys():
-	d_epiincid[(key[0], 'C')].append(d_simepi[key][0]/c_size)
-	d_epiincid[(key[0], 'A')].append(d_simepi[key][1]/a_size)
+	cov = key[0]
+	child_rec, adult_rec = d_simepi[key][0], d_simepi[key][1]
+	d_epiincid[(cov, 'C')].append(child_rec/c_size)
+	d_epiincid[(cov, 'A')].append(adult_rec/a_size)
 
-
+##############################################
 ### calculate OR of children to adults incidence for all epidemics ###
 # grab unique list of coverage values that produced at least one epidemic
 cov_epi = list(set([key[0] for key in d_simepi.keys()]))
@@ -109,22 +111,27 @@ for cov in cov_epi:
 
 # NOTE: how to treat data when item == 1??
 
+##############################################
 ### write dictionaries to files ###
 filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/simresults_%ssims_T%s_vaxcov%s-%s.txt'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
 pp.print_dictionary_to_file(d_simresults, filename)
+
 filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/simepi_%ssims_T%s_vaxcov%s-%s.txt'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
 pp.print_dictionary_to_file(d_simepi, filename)
+
 filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiincid_%ssims_T%s_vaxcov%s-%s.txt'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
 pp.print_dictionary_to_file(d_epiincid, filename)
+
 filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_%ssims_T%s_vaxcov%s-%s.txt'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
 pp.print_dictionary_to_file(d_epiOR, filename)
 
-### plot OR by T ###
+##############################################
+### plot OR by vaxcov ###
 plt.errorbar(cov_epi, [np.mean(d_epiOR[cov]) for cov in cov_epi], yerr=[d_epiORsd[cov] for cov in cov_epi], marker='o', color='black', linestyle='None')
 plt.xlabel('random vax coverage proportion')
 plt.ylabel('OR, child:adult')
 plt.xlim([-.05, 0.25])
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_%ssims_T%s_vaxcov%s-%s.png'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_vaxcov_%ssims_T%s_vaxcov%s-%s.png'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
 plt.savefig(figname)
 
 
