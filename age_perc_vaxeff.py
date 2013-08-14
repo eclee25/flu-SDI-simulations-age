@@ -77,13 +77,13 @@ print "number of child and adult nodes:", c_size, a_size
 ### vax eff simulations ###
 for scenario in vaxcov_scenarios:
 	vc_scen = scenario
+	start = clock()
 	for s in susceplist:
 		print "simulations on susceptibility level: ", s
 		for num in np.arange(numsims):
-			start = clock()
 			d_simresults[(vc_scen, s, num)] = perc.perc_age_vaxeff(G, d_node_age, T, vc_scen, s) 
 			# value is tuple: (child_rec, adult_rec, total_rec, total_vax)
-# 			print "simtime, simnum:", clock()-start, "\t", num
+	print "simtime, simnum:", clock()-start, "\t", num
 ##############################################
 ### calculate incidence for children and adults for each simulation that turned into an epidemic ###
 # separate epidemics from all results
@@ -129,8 +129,9 @@ plt.xlabel('susceptibility (vax eff = 1 - susceptibility)')
 plt.ylabel('OR, child:adult')
 plt.xlim([-.05, 1.05])
 plt.legend(loc = 'upper left')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORvaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_vaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
 plt.savefig(figname)
+plt.close()
 # plt.show()
 
 ##############################################
@@ -143,15 +144,15 @@ for scenario in vaxcov_scenarios:
 		d_episize[s] = [d_simepi[key][2] for key in d_simepi if scenario == key[0] and s == key[1]]
 	d_episize_sd = dict((k, np.std(d_episize[k])) for k in d_episize)
 	print scenario, 'episize', d_episize.items()
-	
 	# plot
 	plt.errorbar(s_epi, [np.mean(d_episize[s]) for s in s_epi], yerr=[d_episize_sd[s] for s in s_epi], marker='o', color=colorlist.pop(0), linestyle='None', label = scenario + ' coverage')
 plt.xlabel('susceptibility (vax eff = 1 - susceptibility)')
 plt.ylabel('epidemic size')
 plt.xlim([-.05, 1.05])
 plt.legend(loc = 'upper left')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/episize_vaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/episize_vaxeff_%ssims_T%s_vaxcov-%s_suscep%s-%s.png'%(numsims, str(T), scenario, str(min(susceplist)), str(max(susceplist)))
 plt.savefig(figname)
+plt.close()
 # plt.show()
 
 ### DIAGNOSTICS: number of epidemics ### 
@@ -161,8 +162,7 @@ for scenario in vaxcov_scenarios:
 	s_epi = list(set([key[1] for key in d_simepi if scenario == key[0]]))
 	for s in s_epi:
 		d_numepi[s] = len([d_simepi[key][2] for key in d_simepi if scenario == key[0] and s == key[1]])
-	
-	# plot
+		# plot
 	plt.plot(sorted(s_epi), [d_numepi[s] for s in sorted(s_epi)], marker='o', color=colorlist.pop(0), label = scenario + ' coverage')
 plt.xlabel('susceptibility (vax eff = 1 - susceptibility)')
 plt.ylabel('number of epidemics')
@@ -170,6 +170,7 @@ plt.xlim([-.05, 1.05])
 plt.legend(loc = 'upper left')
 figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/numepi_vaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
 plt.savefig(figname)
+plt.close()
 # plt.show()
 
 ##############################################
