@@ -91,7 +91,7 @@ for cov in vaxcovlist:
 d_simepi = perc.epidemicsonly(d_simresults, size_epi) 
 
 # calculate incidence of children and adults
-for key in d_simepi.keys():
+for key in d_simepi:
 	cov = key[0]
 	child_rec, adult_rec = d_simepi[key][0], d_simepi[key][1]
 	d_epiincid[(cov, 'C')].append(child_rec/c_size)
@@ -100,7 +100,7 @@ for key in d_simepi.keys():
 ##############################################
 ### calculate OR of children to adults incidence for all epidemics ###
 # grab unique list of coverage values that produced at least one epidemic
-cov_epi = list(set([key[0] for key in d_simepi.keys()]))
+cov_epi = list(set([key[0] for key in d_simepi]))
 # calculate OR
 for cov in cov_epi:
 # 	print cov, d_epiincid[(cov, 'C')], d_epiincid[(cov, 'A')]
@@ -110,6 +110,56 @@ for cov in cov_epi:
 	d_epiORsd[cov] = np.std(d_epiOR[cov]) # for errorbars in plot
 
 # NOTE: how to treat data when item == 1??
+
+##############################################
+### plot OR by vaxcov ###
+plt.errorbar(cov_epi, [np.mean(d_epiOR[cov]) for cov in cov_epi], yerr=[d_epiORsd[cov] for cov in cov_epi], marker='o', color='black', linestyle='None')
+plt.xlabel('random vax coverage proportion')
+plt.ylabel('OR, child:adult')
+plt.xlim([-.05, 0.25])
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_vaxcov_%ssims_T%s_vaxcov%s-%s.png'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
+# plt.savefig(figname)
+plt.show()
+plt.close()
+
+##############################################
+### DIAGNOSTICS: epidemic size w/ error bars ###
+colorlist = ['black', 'blue']
+d_episize = defaultdict(list)
+cov_epi = list(set([key[0] for key in d_simepi]))
+for cov in cov_epi:
+	d_episize[cov] = [d_simepi[key][2] for key in d_simepi if cov == key[0]]
+d_episize_sd = dict((k, np.std(d_episize[k])) for k in d_episize)
+print 'episize', d_episize.items()
+
+# plot
+plt.errorbar(cov_epi, [np.mean(d_episize[cov]) for cov in cov_epi], yerr=[d_episize_sd[cov] for cov in cov_epi], marker='o', color=colorlist.pop(0), linestyle='None')
+plt.xlabel('vax coverage')
+plt.ylabel('epidemic size')
+plt.xlim([-.05, 0.25])
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/episize_vaxcov_%ssims_T%s_vaxcov%s-%s.png'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
+# plt.savefig(figname)
+plt.show()
+plt.close()
+
+
+### DIAGNOSTICS: number of epidemics ### 
+colorlist = ['black', 'blue']
+d_numepi ={}
+cov_epi = list(set([key[0] for key in d_simepi]))
+for cov in cov_epi:
+	d_numepi[cov] = len([d_simepi[key][2] for key in d_simepi if cov == key[0]])
+print 'numepi', d_numepi.items()
+
+# plot
+plt.plot(sorted(cov_epi), [d_numepi[cov] for cov in sorted(cov_epi)], marker='o', color=colorlist.pop(0))
+plt.xlabel('vax coverage')
+plt.ylabel('number of epidemics')
+plt.xlim([-.05, 0.25])
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/numepi_vaxcov_%ssims_T%s_vaxcov%s-%s.png'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
+# plt.savefig(figname)
+plt.show()
+plt.close()
 
 ##############################################
 ### write dictionaries to files ###
@@ -124,19 +174,6 @@ pp.print_dictionary_to_file(d_epiincid, filename)
 
 filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_%ssims_T%s_vaxcov%s-%s.txt'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
 pp.print_dictionary_to_file(d_epiOR, filename)
-
-##############################################
-### plot OR by vaxcov ###
-plt.errorbar(cov_epi, [np.mean(d_epiOR[cov]) for cov in cov_epi], yerr=[d_epiORsd[cov] for cov in cov_epi], marker='o', color='black', linestyle='None')
-plt.xlabel('random vax coverage proportion')
-plt.ylabel('OR, child:adult')
-plt.xlim([-.05, 0.25])
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_vaxcov_%ssims_T%s_vaxcov%s-%s.png'%(numsims, str(Tcov), str(min(vaxcovlist)), str(max(vaxcovlist)))
-plt.savefig(figname)
-
-
-
-
 
 
 
