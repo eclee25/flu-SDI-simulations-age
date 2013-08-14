@@ -46,6 +46,8 @@ import random as rnd
 ####################################################
 # number of child and adult nodes in network
 def child_adult_size(dict_node_age):
+	''' Return the number of child and adult nodes in the network. 
+	'''
 	child_size = len([node for node in dict_node_age if dict_node_age[node] =='3'])
 	adult_size = len([node for node in dict_node_age if dict_node_age[node] =='4'])
 	return child_size, adult_size
@@ -53,6 +55,8 @@ def child_adult_size(dict_node_age):
 ###################################################
 # separate epidemics from all results
 def epidemicsonly(dict_simresults, episize):
+	''' From a dictionary of all results, return a dictionary subset of the epidemic results only. 
+	'''
 	return dict((k, dict_simresults[k]) for k in dict_simresults.keys() if dict_simresults[k][2] > episize)
 
 # ###################################################
@@ -66,6 +70,8 @@ def epidemicsonly(dict_simresults, episize):
 ####################################################
 # random vax strategy with vaxcov% coverage and 100% efficacy
 def rnd_vax(G, vaxcov):
+	''' Implement a random vax strategy on a graph where vax efficacy is 100% and vax coverage is vaxcov%.
+	'''
 	for n in G.nodes():
 		if rnd.random() < vaxcov:
 			G.remove_edges_from(G.edges(n))
@@ -73,6 +79,8 @@ def rnd_vax(G, vaxcov):
 ####################################################
 # age structured percolation function with random vax strategy with vaxcov% coverage and defined susceptibility multiplier, where 1 is fully susceptible
 def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
+	''' Age-structured percolation function with random vaccination with low (0.245) and high (0.455) coverage scenarios. Susceptibility (1 - vax efficacy) is set outside the function and vaccinated individuals have a probability of T * susceptibility of infection. The function returns the number of children, adults, total infected, and total vaccinated during th simulation.
+	'''
 
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -120,6 +128,9 @@ def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
 ####################################################
 # general age-structured percolation function 
 def perc_age_gen(G, dict_node_age, T):
+	''' General age-structured percolation function that returns the number of children, adults, and total infected individuals during the simulation.
+	'''
+	
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
 	p_zero = rnd.choice(G.nodes()) # Randomly choose one node as patient zero
