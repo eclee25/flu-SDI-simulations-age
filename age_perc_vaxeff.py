@@ -45,6 +45,7 @@ d_epiORsd = {} # d_epiORsd[T] = sd of ORs across simulations that resulted in ep
 numsims = 4000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 T = 0.065 # ~20% AR in naive population
+# Tcov = 0.077 # ~40% AR in naive population
 susceplist = np.linspace(0, 1, num=21, endpoint=True) # susceptibility multipliers
 vaxcov_scenarios = ['Low', 'High']
 # just for reference
@@ -78,12 +79,23 @@ print "number of child and adult nodes:", c_size, a_size
 for scenario in vaxcov_scenarios:
 	vc_scen = scenario
 	start = clock()
+	
+	# simulations
 	for s in susceplist:
 		print "simulations on susceptibility level: ", s
+		# d_binlist[simnumber] = [list of 0s and 1s in node numbered index - 1 if node was infected in simnumber simulation]
+		d_binlist = defaultdict(list)
+		
 		for num in np.arange(numsims):
-			d_simresults[(vc_scen, s, num)] = perc.perc_age_vaxeff(G, d_node_age, T, vc_scen, s) 
-			# value is tuple: (child_rec, adult_rec, total_rec, total_vax)
-	print "simtime, simnum:", clock()-start, "\t", num
+			child_rec, adult_rec, tot_rec, tot_vax, bin_list = perc.perc_age_vaxeff(G, d_node_age, T, vc_scen, s) 
+			d_simresults[(vc_scen, s, num)] = (child_rec, adult_rec, tot_rec, tot_vax)
+			d_binlist[num] = bin_list
+#		print "simtime, simnum:", clock()-start, "\t", num
+	# print binary file of infecteds for each set of cov simulations
+	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_vaxeff_%ssims_T%s_cov%s_suscep%s.txt'%(numsims, str(T), scenario, str(s))
+	pp.print_dictlist_to_file(d_binlist, filename)
+
+	
 ##############################################
 ### calculate incidence for children and adults for each simulation that turned into an epidemic ###
 # separate epidemics from all results
@@ -129,10 +141,10 @@ plt.xlabel('susceptibility (vax eff = 1 - susceptibility)')
 plt.ylabel('OR, child:adult')
 plt.xlim([-.05, 1.05])
 plt.legend(loc = 'upper left')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_vaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_vaxeff_%ssims_T%s_cov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
 plt.savefig(figname)
 plt.close()
-# plt.show()
+
 
 ##############################################
 ### DIAGNOSTICS: epidemic size w/ error bars ###
@@ -150,7 +162,7 @@ plt.xlabel('susceptibility (vax eff = 1 - susceptibility)')
 plt.ylabel('epidemic size')
 plt.xlim([-.05, 1.05])
 plt.legend(loc = 'upper left')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/episize_vaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/episize_vaxeff_%ssims_T%s_cov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
 plt.savefig(figname)
 plt.close()
 # plt.show()
@@ -168,24 +180,15 @@ plt.xlabel('susceptibility (vax eff = 1 - susceptibility)')
 plt.ylabel('number of epidemics')
 plt.xlim([-.05, 1.05])
 plt.legend(loc = 'upper left')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/numepi_vaxeff_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/diagnostics/numepi_vaxeff_%ssims_T%s_cov%s-%s_suscep%s-%s.png'%(numsims, str(T), '0.245', '0.455', str(min(susceplist)), str(max(susceplist)))
 plt.savefig(figname)
 plt.close()
 # plt.show()
 
 ##############################################
 ### write dictionaries to files ###
-filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/simresults_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.txt'%(numsims, str(T), str(min(vaxcov_vals)), str(max(vaxcov_vals)), str(min(susceplist)), str(max(susceplist)))
-pp.print_dictionary_to_file(d_simresults, filename)
-
-filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/simepi_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.txt'%(numsims, str(T), str(min(vaxcov_vals)), str(max(vaxcov_vals)), str(min(susceplist)), str(max(susceplist)))
-pp.print_dictionary_to_file(d_simepi, filename)
-
-filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiincid_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.txt'%(numsims, str(T), str(min(vaxcov_vals)), str(max(vaxcov_vals)), str(min(susceplist)), str(max(susceplist)))
-pp.print_dictionary_to_file(d_epiincid, filename)
-
-filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_%ssims_T%s_vaxcov%s-%s_suscep%s-%s.txt'%(numsims, str(T), str(min(vaxcov_vals)), str(max(vaxcov_vals)), str(min(susceplist)), str(max(susceplist)))
-pp.print_dictionary_to_file(d_epiOR, filename)
+filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_vaxeff_%ssims_T%s_cov%s-%s_suscep%s-%s.txt'%(numsims, str(T), str(min(vaxcov_vals)), str(max(vaxcov_vals)), str(min(susceplist)), str(max(susceplist)))
+pp.print_OR_to_file(d_epiOR, filename)
 
 
 

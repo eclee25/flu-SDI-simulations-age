@@ -40,6 +40,7 @@
 
 ### import packages/modules ###
 import random as rnd
+import numpy as np
 
 
 # functions
@@ -117,13 +118,18 @@ def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
 		states[v] = 'r'
 		recovered.append(v)
 	
+	# return binary list of ordered number nodes that were infected
+	binary_list = [0 for n in np.arange(G.order())]
+	for node in recovered:
+		binary_list[int(node) - 1] = 1
+	
 	# infected children
 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
 	# infected adults
 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']) )
 	
 	# number recovered children, adults, and total pop, and number of initially vaccinated individuals
-	return rec_child_n, rec_adult_n, len(recovered), len(vaccinated)
+	return rec_child_n, rec_adult_n, len(recovered), len(vaccinated), binary_list
 
 ####################################################
 # general age-structured percolation function 
@@ -148,13 +154,18 @@ def perc_age_gen(G, dict_node_age, T):
 		states[v] = 'r'
 		recovered.append(v)
 	
+	# return binary list of ordered number nodes that were infected
+	binary_list = [0 for n in np.arange(G.order())]
+	for node in recovered:
+		binary_list[int(node) - 1] = 1
+	
 	# infected children
 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
 	# infected adults
 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']) )
 	
 	# number recovered in children and adults and total
-	return rec_child_n, rec_adult_n, len(recovered)
+	return rec_child_n, rec_adult_n, len(recovered), binary_list
 
 
 
