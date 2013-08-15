@@ -48,12 +48,11 @@ d_episize = defaultdict(list) # epidemic sizes of epidemics only
 d_ressize = defaultdict(list) # epidemics sizes of all simulations
 
 
-
 ### parameters ###
-numsims = 50 # number of simulations
+numsims = 2000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
-Tlist = np.linspace(0, .2, num=21, endpoint=True) # probability of transmission
-# Tlist = np.linspace(0.05, 0.10, num = 21, endpoint=True) # zoom in on realistic values
+# Tlist = np.linspace(0, .2, num=21, endpoint=True) # probability of transmission
+Tlist = np.linspace(0.04, 0.07, num = 16, endpoint=True) # zoom in on realistic values
 
 
 ### import data ###
@@ -85,16 +84,16 @@ for T in Tlist:
 	print "T value for current simulations:", T
 	# d_binlist[simnumber] = [list of 0s and 1s in node numbered index - 1 if node was infected in simnumber simulation]
 	d_binlist = defaultdict(list) 
+	start = clock()
 	for num in np.arange(numsims):
-		start = clock()
 		child_rec, adult_rec, total_rec, bin_list = perc.perc_age_gen(G, d_node_age, T)
 		d_simresults[(T, num)] = (child_rec, adult_rec, total_rec)
 		d_binlist[num] = bin_list
-# 		print "simtime, simnum:", clock()-start, "\t", num
+	print "simtime, simnum:", clock()-start, "\t", num
 
 	# print binary file of infecteds for each set of T simulations
 	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_T_%ssims_T%s_vax0.txt' %(numsims, str(T))
-# 	pp.print_dictlist_to_file(d_binlist, filename)
+	pp.print_dictlist_to_file(d_binlist, filename)
 
 ##############################################
 ### calculate OR for all results ###
@@ -154,10 +153,10 @@ d_episize_sd = dict((k, np.std(d_episize[k])) for k in d_episize)
 plt.errorbar(T_epi, [np.mean(d_epiOR[T]) for T in T_epi], yerr=[d_epiORsd[T] for T in T_epi], marker='o', color='black', linestyle='None')
 plt.xlabel('T')
 plt.ylabel('OR, child:adult')
-plt.xlim([0, 0.25])
+plt.xlim([-.05, 0.25])
 figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(Tlist)), str(max(Tlist)))
-# plt.savefig(figname)
-plt.show()
+plt.savefig(figname)
+# plt.show()
 plt.close()
 
 # ECL 8/14/13 dictionaries need to be fixed
@@ -188,9 +187,9 @@ plt.scatter(episize, epiOR, marker = 'o', facecolors='none', edgecolors='blue', 
 plt.xlabel('epidemic size')
 plt.ylabel('OR, child:adult')
 plt.legend(loc = 'upper left')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_size_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(T_epi)), str(max(T_epi)))
-# plt.savefig(figname)
-plt.show()
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_size_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(Tlist)), str(max(Tlist)))
+plt.savefig(figname)
+# plt.show()
 plt.close()
 
 ##############################################
@@ -201,8 +200,8 @@ plt.xlabel('T')
 plt.ylabel('epidemic size')
 plt.xlim([-.05, 0.25])
 figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/episize_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(Tlist)), str(max(Tlist)))
-# plt.savefig(figname)
-plt.show()
+plt.savefig(figname)
+# plt.show()
 plt.close()
 
 ### DIAGNOSTICS: number of epidemics ### 
@@ -217,13 +216,13 @@ plt.xlabel('T')
 plt.ylabel('number of epidemics')
 plt.xlim([-.05, 0.25])
 figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/numepi_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(Tlist)), str(max(Tlist)))
-# plt.savefig(figname)
-plt.show()
+plt.savefig(figname)
+# plt.show()
 plt.close()
 
 
 ##############################################
 ### write dictionaries to files ###
 filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_T_%ssims_T%s-%s_vax0.txt'%(numsims, str(min(Tlist)), str(max(Tlist)))
-# pp.print_OR_to_file(d_epiOR, filename)
+pp.print_OR_to_file(d_epiOR, filename)
 
