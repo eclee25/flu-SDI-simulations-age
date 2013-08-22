@@ -99,6 +99,7 @@ for scenario in vaxcov_scenarios:
 ##############################################
 ### calculate incidence for children and adults for each simulation that turned into an epidemic ###
 # separate epidemics from all results
+# key = (vc_scen, s, num), val = (child_rec, adult_rec, tot_rec, tot_vax)
 d_simepi = perc.epidemicsonly(d_simresults, size_epi) 
 
 # calculate incidence of children and adults
