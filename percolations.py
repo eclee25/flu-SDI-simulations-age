@@ -61,14 +61,6 @@ def epidemicsonly(dict_simresults, episize):
 	'''
 	return dict((k, dict_simresults[k]) for k in dict_simresults.keys() if dict_simresults[k][2] > episize)
 
-# ###################################################
-# # calculate incidence of children and adults 
-# # won't return anything, dictionary items are added to an empty dictionary -- is this okay for readability? (not currently used in the main code)
-# def child_adult_incid(dict_simepi, dict_epiincid, child_size, adult_size):
-# 	for key in dict_simepi:
-# 		dict_epiincid[(key[0], 'C')].append(dict_simepi[key][0]/child_size)
-# 		dict_epiincid[(key[0], 'A')].append(dict_simepi[key][1]/adult_size)
-
 ####################################################
 # random vax strategy with vaxcov% coverage and 100% efficacy
 def rnd_vax(G, vaxcov):
@@ -252,53 +244,3 @@ def calc_OR_from_list(dict_node_age, infected_tstep, tstep):
 	return OR
 	
 
-### Inefficient percolations - do NOT use ###
-# #############################
-# # DICT ONLY: general age-structured percolation function
-# def perc_age_gen(G, dict_node_age, T):
-# 	# set initial conditions
-# 	states = dict([(node, 's') for node in G.nodes()])
-# 	p_zero = rnd.choice(G.nodes()) # Randomly choose one node as patient zero
-# 	states[p_zero] = 'i'
-# 	
-# 	# simulation
-# 	while len([states[node] for node in states if states[node]=='i']) > 0:
-# 		v = rnd.choice([node for node in states if states[node] == 'i'])
-# 		for u in G.neighbors(v):
-# 			if states[u] == 's' and rnd.random() <T: # make sure node u is still susceptible
-# 				states[u] = 'i'
-# 		states[v] = 'r'
-# 	
-# 	# infected children
-# 	rec_child_n = float(len([node for node in states if dict_node_age[node] == '3' and states[node] == 'r']))
-# 	# infected adults
-# 	rec_adult_n = float(len([node for node in states if dict_node_age[node] == '4' and states[node] == 'r']))
-# 	
-# 	# return incidence in children and adults
-# 	return rec_child_n, rec_adult_n, len([node for node in states if states[node]=='r'])
-
-##################################
-## LIST ONLY: general age-structured percolation function
-## this method was magnitudes slower than the dictionary method of percolation
-# def perc_age_gen(G, dict_node_age, T):
-# 	# set initial conditions
-# 	p_zero = rnd.choice(G.nodes()) # Randomly choose one node as patient zero
-# 	infected    = [p_zero]
-# 	recovered   = []
-# 	
-# 	# simulation
-# 	while len(infected) > 0:
-# 		v = infected.pop(0)
-# 		for u in G.neighbors(v):
-# 			# We need to make sure Node u is still susceptible
-# 			if u not in infected and u not in recovered and rnd.random()<T:
-# 				infected.append(u)
-# 		recovered.append(v)
-# 	
-# 	# infected children
-# 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
-# 	# infected adults
-# 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']) )
-# 	
-# 	# return incidence in children and adults
-# 	return rec_child_n, rec_adult_n, len(recovered)
