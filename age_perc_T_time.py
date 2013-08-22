@@ -42,7 +42,7 @@ d_simOR = defaultdict(list) # OR for each time step for all sims
 d_epiOR = defaultdict(list) # OR for each time step for epidemics only
 
 ### parameters ###
-numsims = 50 # number of simulations
+numsims = 100 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -75,7 +75,7 @@ c_size, a_size = perc.child_adult_size(d_node_age)
 
 
 ###############################################
-### T simulations ###
+### beta simulations ###
 for beta in blist:
 	print "beta value for current simulations:", beta
 	# d_binlist[simnumber] = [list of 0s and 1s in node numbered index - 1 if node was infected in entire simnumber simulation]
@@ -90,43 +90,39 @@ for beta in blist:
 
 	# print binary file of infecteds for each set of T simulations
 	# order of simulations in dictionary doesn't matter
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_beta_time_%ssims_beta%s_vax0.txt' %(numsims, beta)
+	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_dictlist_to_file(d_binlist, filename)
 
 
 ##############################################
-### subset OR for epidemics only ###
-# # separate epidemics from all results
+### subset: epidemics only ###
+# # subset epidemics from all results
 # key = (beta, simnumber), value = (child_rec, adult_rec, total_rec)
 d_simepi = perc.epidemicsonly(d_simresults, size_epi)
 
-# grab unique list of betas that produced at least one epidemic
-beta_epi = list(set([key[0] for key in d_simepi]))
-
-# separate OR values that produced epidemics
+# subset OR values that produced epidemics
 # key = (beta, simnumber), value = [ORs at different timesteps]
 for key in d_simepi:
 	d_epiOR[key] = d_simOR[key]
 
-# print epi OR values to file, one file per beta
-for beta in beta_epi:
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%s_vax0.txt' %(numsims, beta)
-	pp.print_OR_time_to_file(d_epiOR, filename, beta)
+# grab unique list of betas that produced at least one epidemic
+beta_epi = list(set([key[0] for key in d_simepi]))
 
 ##############################################
 ### plot OR by time for each beta value ###
+# each sim is one line
 for beta in beta_epi:
 	pl_ls = [key for key in d_epiOR if key[0] == beta]
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
-	plt.xlabel('time step ' + str(beta))
+	plt.plot(xrange(len(d_epiOR[key])), [1] * len(d_epiOR[key]), marker = 'None', color = 'red', linewidth = 2)
+	plt.xlabel('time step, beta: ' + str(beta))
 	plt.ylabel('OR, child:adult')
-	plt.ylim([-3, 50])
-	plt.xlim([-1, 200])
-	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/OR_beta_time_%ssims_beta%s_vax0.png' %(numsims, beta)
+	plt.ylim([-3, 25])
+	plt.xlim([-1, 100])
+	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0_%s.png' %(numsims, beta, key)
 	plt.savefig(figname)
 	plt.close()
-
 # 	plt.show()
 
 
@@ -176,8 +172,12 @@ for beta in beta_epi:
 # plt.close()
 #
 #
-# ##############################################
-# ### write dictionaries to files ###
-# filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_T_%ssims_T%s-%s_vax0.txt'%(numsims, str(min(Tlist)), str(max(Tlist)))
-# # pp.print_OR_to_file(d_epiOR, filename)
+##############################################
+### write dictionaries to files ###
+# print epi OR values to file, one file per beta
+for beta in beta_epi:
+	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	pp.print_OR_time_to_file(d_epiOR, filename, beta)
+
+
 
