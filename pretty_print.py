@@ -31,6 +31,7 @@ def print_dictlist_to_file(dic, filename):
 	for k, v in dic.items():
 		str_v = str(v)[1:-1]
 		fwriter.write('%s\n' % (str_v))
+	fwriter.close()
 
 def print_OR_to_file(dic, filename):
 	fwriter = open(filename, 'w+')
@@ -38,3 +39,17 @@ def print_OR_to_file(dic, filename):
 		str_k = str(k)
 		str_v = str(v)[1:-1]
 		fwriter.write('%s,%s\n' % (str_k, str_v))
+	fwriter.close()
+
+def print_OR_time_to_file(dic, filename, beta):
+	fwriter = open(filename, 'w+')
+	for k, v in dic.items():
+		if k[0] == beta:
+			str_k = str(k)
+			str_v = str(v)[1:-1]
+			fwriter.write('%s\n' % (str_v))
+	fwriter.close()
+
+			
+			
+			

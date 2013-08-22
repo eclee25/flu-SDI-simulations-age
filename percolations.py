@@ -41,6 +41,7 @@
 ### import packages/modules ###
 import random as rnd
 import numpy as np
+from collections import defaultdict
 
 
 # functions
@@ -51,7 +52,7 @@ def child_adult_size(dict_node_age):
 	'''
 	child_size = len([node for node in dict_node_age if dict_node_age[node] =='3'])
 	adult_size = len([node for node in dict_node_age if dict_node_age[node] =='4'])
-	return child_size, adult_size
+	return float(child_size), float(adult_size)
 
 ###################################################
 # separate epidemics from all results
@@ -106,7 +107,7 @@ def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
 			vaccinated.append(n)
 	
 	# simulation
-	while len(infected) > 0:
+	while infected:
 		v = infected.pop(0)
 		for u in G.neighbors(v):
 			if states[u] == 's' and rnd.random() < T:
@@ -145,7 +146,7 @@ def perc_age_gen(G, dict_node_age, T):
 	recovered   = [] 
 	
 	# simulation
-	while len(infected) > 0:
+	while infected:
 		v = infected.pop(0)
 		for u in G.neighbors(v):
 			if states[u] == 's' and rnd.random() <T: # make sure node u is still susceptible
@@ -168,10 +169,88 @@ def perc_age_gen(G, dict_node_age, T):
 	return rec_child_n, rec_adult_n, len(recovered), binary_list
 
 
+####################################################
+# time-based age-structured percolation function 
+def perc_age_time(G, dict_node_age, beta, gamma):
+	''' Time-based age-structured percolation function that returns the number of children, adults, and total infected individuals during the simulation.
+	'''
+	
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()])
+	# Randomly choose one node as patient zero
+	p_zero = rnd.choice(G.nodes()) 
+	states[p_zero] = 'i'
+	
+	# keep track of infections over time
+	# time steps begin at 0
+	tstep = 0
+	infected_tstep = [p_zero]
+
+	# ORlist is a list of ORs for each time step
+	ORlist = []
+
+	# simulation
+	while infected_tstep:
+		tstep += 1
+		for v in infected_tstep:
+			for u in G.neighbors(v):
+				# make sure node u is still susceptible
+				if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
+					states[u] = 'i'
+			if states[v] == 'i' and rnd.random() < gamma:
+				states[v] = 'r'
+
+		# new infected_tstep lists infected nodes for next tstep
+		infected_tstep = [node for node in states if states[node] == 'i']
+
+		# return a list of ORs for each time step
+		ORlist.append(calc_OR_from_list(dict_node_age, infected_tstep, tstep))
+
+### metrics over entire simulation ###
+
+	# 1) return binary list of ordered number nodes that were infected over entire simulation
+	inf_sim_blist = [0 for n in xrange(G.order())]
+	recovered = [node for node in states if states[node] == 'r']
+	for node in recovered:
+		# subtract 1 from node number because indexing begins with zero (eg. node 1 is in the 0th place in the list)
+		inf_sim_blist[int(node) - 1] = 1
+	
+	# 2) infected children
+	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
+	# 3) infected adults
+	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
+
+	### return data structures ###
+	return rec_child_n, rec_adult_n, len(recovered), inf_sim_blist, ORlist
 
 
+####################################################
+def infected_neighbors(G, node, states):
+    """Calculate the number of infected neighbors for the node"""
+    return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i']) 
 
+####################################################
+def calc_OR_from_list(dict_node_age, infected_tstep, tstep):
+	""" Calculate OR from list of infected nodes. Return NA if numerator or denominator are 0. """
+	infected_child = sum([1 for node in infected_tstep if dict_node_age[node] == '3'])
+	infected_adult = sum([1 for node in infected_tstep if dict_node_age[node] == '4'])
+	
+	# assign size of child and adult populations in network
+	num_child, num_adult = child_adult_size(dict_node_age)
+	
+	# calculate incidence in network
+	incid_child = infected_child/num_child
+	incid_adult = infected_adult/num_adult
+	
+	# calculate OR if incid greater than 0 in both groups
+	if (incid_child > 0 and incid_child < 1 and incid_adult > 0 and incid_adult < 1):
+		OR = (incid_child/(1 - incid_child)) / (incid_adult/(1 - incid_adult))
+	else:
+		OR = 0.0
 
+	# return value
+	return OR
+	
 
 ### Inefficient percolations - do NOT use ###
 # #############################
