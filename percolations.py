@@ -59,7 +59,7 @@ def child_adult_size(dict_node_age):
 def epidemicsonly(dict_simresults, episize):
 	''' From a dictionary of all results, return a dictionary subset of the epidemic results only. 
 	'''
-	return dict((k, dict_simresults[k]) for k in dict_simresults.keys() if dict_simresults[k][2] > episize)
+	return dict((k, dict_simresults[k]) for k in dict_simresults if dict_simresults[k][2] > episize)
 
 ####################################################
 # random vax strategy with vaxcov% coverage and 100% efficacy
@@ -141,24 +141,28 @@ def perc_age_gen(G, dict_node_age, T):
 	while infected:
 		v = infected.pop(0)
 		for u in G.neighbors(v):
-			if states[u] == 's' and rnd.random() <T: # make sure node u is still susceptible
+			# make sure node u is still susceptible
+			if states[u] == 's' and rnd.random() < T: 
 				states[u] = 'i'
 				infected.append(u)
 		states[v] = 'r'
 		recovered.append(v)
 	
 	# return binary list of ordered number nodes that were infected
-	binary_list = [0 for n in np.arange(G.order())]
+	binary_list = [0 for n in xrange(G.order())]
 	for node in recovered:
 		binary_list[int(node) - 1] = 1
 	
 	# infected children
 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
 	# infected adults
-	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']) )
+	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
+	
+	# return OR for simulation
+	ORval = calc_OR_from_list(dict_node_age, recovered)
 	
 	# number recovered in children and adults and total
-	return rec_child_n, rec_adult_n, len(recovered), binary_list
+	return rec_child_n, rec_adult_n, len(recovered), binary_list, ORval
 
 
 ####################################################
@@ -196,7 +200,7 @@ def perc_age_time(G, dict_node_age, beta, gamma):
 		infected_tstep = [node for node in states if states[node] == 'i']
 
 		# return a list of ORs for each time step
-		ORlist.append(calc_OR_from_list(dict_node_age, infected_tstep, tstep))
+		ORlist.append(calc_OR_from_list(dict_node_age, infected_tstep))
 
 ### metrics over entire simulation ###
 
@@ -218,14 +222,16 @@ def perc_age_time(G, dict_node_age, beta, gamma):
 
 ####################################################
 def infected_neighbors(G, node, states):
-    """Calculate the number of infected neighbors for the node"""
+    """ Calculate the number of infected neighbors for the node. 
+	"""
     return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i']) 
 
 ####################################################
-def calc_OR_from_list(dict_node_age, infected_tstep, tstep):
-	""" Calculate OR from list of infected nodes. Return NA if numerator or denominator are 0. """
-	infected_child = sum([1 for node in infected_tstep if dict_node_age[node] == '3'])
-	infected_adult = sum([1 for node in infected_tstep if dict_node_age[node] == '4'])
+def calc_OR_from_list(dict_node_age, infected_nodelist):
+	""" Calculate OR from list of infected nodes. Return OR as 1.0 if numerator or denominator are 0. 
+	"""
+	infected_child = sum([1 for node in infected_nodelist if dict_node_age[node] == '3'])
+	infected_adult = sum([1 for node in infected_nodelist if dict_node_age[node] == '4'])
 	
 	# assign size of child and adult populations in network
 	num_child, num_adult = child_adult_size(dict_node_age)
@@ -238,9 +244,42 @@ def calc_OR_from_list(dict_node_age, infected_tstep, tstep):
 	if (incid_child > 0 and incid_child < 1 and incid_adult > 0 and incid_adult < 1):
 		OR = (incid_child/(1 - incid_child)) / (incid_adult/(1 - incid_adult))
 	else:
-		OR = 0.0
+		# is it more appropriate for the default to be 0 or 1?
+		OR = 1.0
 
 	# return value
 	return OR
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
