@@ -44,8 +44,8 @@ d_epiOR = defaultdict(list) # d_epiOR[cov] = [OR epidemic1, OR epidemic2,...]
 numsims = 4000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 vaxcovlist = np.linspace(0, .2, num=21, endpoint=True) # vax coverage
-T = 0.065 # ~20% AR in naive population
-# T = 0.077 # ~40% AR in naive population
+# T = 0.065 # ~20% AR in naive population
+T = 0.077 # ~40% AR in naive population
 cov_fixed = 0.245 # reference value for OR vs vaxeff plot
 
 ### import data ###
@@ -91,7 +91,7 @@ for cov in vaxcovlist:
 	print "simtime, simnum:", clock()-start, "\t", num
 
 	# print binary file of infecteds for each set of cov simulations
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_cov_%ssims_T%f_eff%0.3f.txt'%(numsims, T, (cov/cov_fixed))
+	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_cov_%ssims_T%.3f_eff%.3f.txt'%(numsims, T, (cov/cov_fixed))
 	pp.print_dictlist_to_file(d_binlist, filename)
 
 ##############################################
@@ -122,7 +122,7 @@ eff_epi = [cov/cov_fixed for cov in sorted(cov_epi)]
 plt.errorbar(eff_epi, [np.mean(d_epiOR[cov]) for cov in sorted(cov_epi)], yerr = [np.std(d_epiOR[cov]) for cov in sorted(cov_epi)], marker = 'o', color = 'black', linestyle = 'None')
 plt.xlabel('random vax efficacy (cov = 0.245)')
 plt.ylabel('OR, child:adult')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_cov_%ssims_T%f_eff%0.3f-%0.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 plt.savefig(figname)
 plt.close()
 # plt.show()
@@ -139,7 +139,7 @@ for cov in sorted(cov_epi):
 plt.errorbar(eff_epi, [np.mean(d_episize[cov]) for cov in sorted(cov_epi)], yerr=[np.std(d_episize[cov]) for cov in sorted(cov_epi)], marker='o', color='black', linestyle='None')
 plt.xlabel('random vax efficacy (cov = 0.245)')
 plt.ylabel('epidemic size')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/episize_cov_%ssims_T%f_eff%0.3f-%0.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/episize_cov_%ssims_T%.3f_eff%.3f-%.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 plt.savefig(figname)
 plt.close()
 # plt.show()
@@ -156,14 +156,14 @@ for cov in sorted(cov_epi):
 plt.plot(eff_epi, [d_numepi[cov] for cov in sorted(cov_epi)], marker='o', color='black')
 plt.xlabel('random vax efficacy (cov = 0.245)')
 plt.ylabel('number of epidemics')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/numepi_cov_%ssims_T%f_eff%0.3f-%0.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/numepi_cov_%ssims_T%.3f_eff%.3f-%.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 plt.savefig(figname)
 plt.close()
 # plt.show()
 
 ##############################################
 ### write dictionaries to files ###
-filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_cov_%ssims_T%f_eff%0.3f-%0.3f.txt'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.txt'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pp.print_OR_to_file(d_epiOR, filename)
 
 
