@@ -42,7 +42,7 @@ d_simOR = defaultdict(list) # OR for each time step for all sims
 d_epiOR = defaultdict(list) # OR for each time step for epidemics only
 
 ### parameters ###
-numsims = 100 # number of simulations
+numsims = 1000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -82,7 +82,7 @@ for beta in blist:
 	d_binlist = defaultdict(list) 
 	for num in xrange(numsims):
 		start = clock()
-		child_rec, adult_rec, total_rec, bin_list, OR_list = perc.perc_age_time(G, d_node_age, beta, gamma)
+		child_rec, adult_rec, total_rec, bin_list, OR_list = perc.episim_age_time(G, d_node_age, beta, gamma)
 		d_binlist[num] = bin_list
 		d_simresults[(beta, num)] = (child_rec, adult_rec, total_rec)
 		d_simOR[(beta, num)] = OR_list
@@ -119,8 +119,8 @@ for beta in beta_epi:
 	plt.xlabel('time step, beta: ' + str(beta))
 	plt.ylabel('OR, child:adult')
 	plt.ylim([-3, 25])
-	plt.xlim([-1, 100])
-	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0_%s.png' %(numsims, beta, key)
+	plt.xlim([-1, 175])
+	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
 # 	plt.show()

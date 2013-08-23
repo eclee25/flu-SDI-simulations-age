@@ -166,9 +166,9 @@ def perc_age_gen(G, dict_node_age, T):
 
 
 ####################################################
-# time-based age-structured percolation function 
-def perc_age_time(G, dict_node_age, beta, gamma):
-	''' Time-based age-structured percolation function that returns the number of children, adults, and total infected individuals during the simulation.
+# time-based age-structured simulation function 
+def episim_age_time(G, dict_node_age, beta, gamma):
+	''' Time-based age-structured simulation function that returns the number of children, adults, and total infected individuals during the simulation. 
 	'''
 	
 	# set initial conditions
@@ -185,18 +185,24 @@ def perc_age_time(G, dict_node_age, beta, gamma):
 	# ORlist is a list of ORs for each time step
 	ORlist = []
 
-	# simulation
+	## simulation ##
 	while infected_tstep:
 		tstep += 1
+		
+		# S to I
+		suscep_tstep = [u for u in states if states[u] == 's']
+		for u in suscep_tstep:
+			# states[u] == 's' condition is extraneous
+			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
+				states[u] = 'i'
+		
+		# I to R
 		for v in infected_tstep:
-			for u in G.neighbors(v):
-				# make sure node u is still susceptible
-				if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
-					states[u] = 'i'
+			# states[v] == 'i' condition is extraneous
 			if states[v] == 'i' and rnd.random() < gamma:
 				states[v] = 'r'
 
-		# new infected_tstep lists infected nodes for next tstep
+		# lists infected nodes for next tstep
 		infected_tstep = [node for node in states if states[node] == 'i']
 
 		# return a list of ORs for each time step
