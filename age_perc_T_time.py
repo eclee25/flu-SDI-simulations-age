@@ -42,7 +42,7 @@ d_simOR = defaultdict(list) # OR for each time step for all sims
 d_epiOR = defaultdict(list) # OR for each time step for epidemics only
 
 ### parameters ###
-numsims = 1000 # number of simulations
+numsims = 100 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -88,6 +88,8 @@ for beta in blist:
 		d_simOR[(beta, num)] = OR_list
 		print "simtime, simnum:", clock()-start, "\t", num
 
+# save the infecteds by time step? what format is best?
+
 	# print binary file of infecteds for each set of T simulations
 	# order of simulations in dictionary doesn't matter
 	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
@@ -109,6 +111,9 @@ for key in d_simepi:
 beta_epi = list(set([key[0] for key in d_simepi]))
 
 ##############################################
+### calculate avg OR for each time point
+
+##############################################
 ### plot OR by time for each beta value ###
 # each sim is one line
 for beta in beta_epi:
@@ -118,43 +123,24 @@ for beta in beta_epi:
 	plt.plot(xrange(len(d_epiOR[key])), [1] * len(d_epiOR[key]), marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('time step, beta: ' + str(beta))
 	plt.ylabel('OR, child:adult')
-	plt.ylim([-3, 25])
-	plt.xlim([-1, 175])
+	plt.ylim([-3, 30])
+	plt.xlim([-1, 250])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
 # 	plt.show()
 
+##############################################
+### plot incidence by time for each beta value ###
 
-#
-# ### plot OR by episize (epidemics only) ###
-# episize, epiOR = [],[]
-# for T in sorted(T_epi):
-# 	for item in d_episize[T]:
-# 		episize.append(item)
-# 	for item in d_epiOR[T]:
-# 		epiOR.append(item)
-# plt.scatter(episize, epiOR, marker = 'o', facecolors='none', edgecolors='blue', s = 45, label='epidemics only')
-# plt.xlabel('epidemic size')
-# plt.ylabel('OR, child:adult')
-# plt.legend(loc = 'upper left')
-# figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_size_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(Tlist)), str(max(Tlist)))
-# plt.savefig(figname)
-# # plt.show()
-# plt.close()
-#
-# ##############################################
-# ### DIAGNOSTICS: epidemic size w/ error bars ###
-# # plot episize by T
-# plt.errorbar(T_epi, [np.mean(d_episize[T]) for T in T_epi], yerr=[d_episize_sd[T] for T in T_epi], marker='o', color='black', linestyle='None')
-# plt.xlabel('T')
-# plt.ylabel('epidemic size')
-# plt.xlim([-.05, 0.25])
-# figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/episize_T_%ssims_T%s-%s_vax0.png' %(numsims, str(min(Tlist)), str(max(Tlist)))
-# plt.savefig(figname)
-# # plt.show()
-# plt.close()
-#
+
+
+##############################################
+### plot prevalence by time for each beta value ###
+
+
+
+##############################################
 # ### DIAGNOSTICS: number of epidemics ### 
 # d_numepi ={}
 # T_epi = list(set([key[0] for key in d_simepi]))
