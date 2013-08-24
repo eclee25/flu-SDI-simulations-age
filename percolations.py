@@ -4,17 +4,15 @@
 ###Python template
 ###Author: Elizabeth Lee
 ###Date: 8/7/13
-###Purpose:
-#### number of child and adult nodes in network
-#### separate epidemics from results
-#### calculate incidence of children and adults??
-#### random vax strategy
-#### vax efficacy perc function for age-structured networks
-#### gen perc function for age-structured networks
+###Purpose: run epidemic simulations on an age-structured network
+#### general percolation simulations
+#### percolations with random vaccination
+#### time-based epidemic simulations
+#### calculation of OR from results
 
 ###Import data: 
 
-###Command Line: python 
+###Command Line: 
 ##############################################
 
 ####### notes #######
@@ -243,15 +241,15 @@ def calc_OR_from_list(dict_node_age, infected_nodelist):
 	num_child, num_adult = child_adult_size(dict_node_age)
 	
 	# calculate incidence in network
-	incid_child = infected_child/num_child
-	incid_adult = infected_adult/num_adult
+	incid_child = infected_child/float(num_child)
+	incid_adult = infected_adult/float(num_adult)
 	
 	# calculate OR if incid greater than 0 in both groups
 	if (incid_child > 0 and incid_child < 1 and incid_adult > 0 and incid_adult < 1):
 		OR = (incid_child/(1 - incid_child)) / (incid_adult/(1 - incid_adult))
 	else:
-		# is it more appropriate for the default to be 0 or 1?
-		OR = 1.0
+		# not a number if 0 or division by 0
+		OR = float('NaN')
 
 	# return value
 	return OR
