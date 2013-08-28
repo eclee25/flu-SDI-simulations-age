@@ -180,8 +180,13 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	tstep = 0
 	infected_tstep = [p_zero]
 
+	# tot_incidlist is a list of total incidence for each time step
+	tot_incidlist = [len(infected_tstep)]
+	# tot_prevallist is a list of total prevalence for each time step
+	tot_prevallist = [len(infected_tstep)]
 	# ORlist is a list of ORs for each time step
 	ORlist = []
+	
 
 	## simulation ##
 	while infected_tstep:
@@ -194,17 +199,28 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
 				states[u] = 'i'
 		
+		# count to keep track of incidence
+		incid_ct = 0
+
 		# I to R
 		for v in infected_tstep:
 			# states[v] == 'i' condition is extraneous
 			if states[v] == 'i' and rnd.random() < gamma:
 				states[v] = 'r'
-
+				incid_ct += 1
+		
 		# lists infected nodes for next tstep
 		infected_tstep = [node for node in states if states[node] == 'i']
+		
+		# track total incidence for each time step
+		tot_incidlist.append(incid_ct)
+		
+		# track total prevalence for each time step
+		tot_prevallist.append(len(infected_tstep))
 
 		# return a list of ORs for each time step
-		ORlist.append(calc_OR_from_list(dict_node_age, infected_tstep))
+		OR = calc_OR_from_list(dict_node_age, infected_tstep)
+		ORlist.append(OR)
 
 ### metrics over entire simulation ###
 
@@ -221,7 +237,7 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
 
 	### return data structures ###
-	return rec_child_n, rec_adult_n, len(recovered), inf_sim_blist, ORlist
+	return rec_child_n, rec_adult_n, len(recovered), inf_sim_blist, ORlist, tot_incidlist, tot_prevallist
 
 
 ####################################################
@@ -241,12 +257,12 @@ def calc_OR_from_list(dict_node_age, infected_nodelist):
 	num_child, num_adult = child_adult_size(dict_node_age)
 	
 	# calculate incidence in network
-	incid_child = infected_child/float(num_child)
-	incid_adult = infected_adult/float(num_adult)
+	preval_child = infected_child/float(num_child)
+	preval_adult = infected_adult/float(num_adult)
 	
 	# calculate OR if incid greater than 0 in both groups
-	if (incid_child > 0 and incid_child < 1 and incid_adult > 0 and incid_adult < 1):
-		OR = (incid_child/(1 - incid_child)) / (incid_adult/(1 - incid_adult))
+	if (preval_child > 0 and preval_child < 1 and preval_adult > 0 and preval_adult < 1):
+		OR = (preval_child/(1 - preval_child)) / (preval_adult/(1 - preval_adult))
 	else:
 		# not a number if 0 or division by 0
 		OR = float('NaN')

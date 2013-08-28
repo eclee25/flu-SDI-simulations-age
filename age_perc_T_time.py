@@ -40,9 +40,13 @@ d_simresults = {} # d_simresults[(beta, simnumber)] = number infected
 d_episize = defaultdict(list) # epidemic sizes of epidemics only
 d_simOR = defaultdict(list) # OR for each time step for all sims
 d_epiOR = defaultdict(list) # OR for each time step for epidemics only
+d_simincid = defaultdict(list) # incidence for each time step for all sims
+d_epiincid = defaultdict(list) # incidence for each time step for epidemics only
+d_simpreval = defaultdict(list) # prevalence for each time step for all sims
+d_epipreval = defaultdict(list) # prevalence for each time step for epidemics only
 
 ### parameters ###
-numsims = 100 # number of simulations
+numsims = 1000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -82,17 +86,19 @@ for beta in blist:
 	d_binlist = defaultdict(list) 
 	for num in xrange(numsims):
 		start = clock()
-		child_rec, adult_rec, total_rec, bin_list, OR_list = perc.episim_age_time(G, d_node_age, beta, gamma)
+		child_rec, adult_rec, total_rec, bin_list, OR_list, tot_incid_list, tot_preval_list = perc.episim_age_time(G, d_node_age, beta, gamma)
 		d_binlist[num] = bin_list
 		d_simresults[(beta, num)] = (child_rec, adult_rec, total_rec)
 		d_simOR[(beta, num)] = OR_list
+		d_simincid[(beta, num)] = tot_incid_list
+		d_simpreval[(beta, num)] = tot_preval_list
 		print "simtime, simnum:", clock()-start, "\t", num
 
 # save the infecteds by time step? what format is best?
 
 	# print binary file of infecteds for each set of T simulations
 	# order of simulations in dictionary doesn't matter
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	filename = '/home/elee/Documents	/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_dictlist_to_file(d_binlist, filename)
 
 
@@ -102,10 +108,12 @@ for beta in blist:
 # key = (beta, simnumber), value = (child_rec, adult_rec, total_rec)
 d_simepi = perc.epidemicsonly(d_simresults, size_epi)
 
-# subset OR values that produced epidemics
-# key = (beta, simnumber), value = [ORs at different timesteps]
+# subset OR/incidence/prevalence values that produced epidemics
+# key = (beta, simnumber), value = [ORs/new cases/total cases at different timesteps]
 for key in d_simepi:
 	d_epiOR[key] = d_simOR[key]
+	d_epiincid[key] = d_simincid[key]
+	d_epipreval[key] = d_simpreval[key]
 
 # grab unique list of betas that produced at least one epidemic
 beta_epi = list(set([key[0] for key in d_simepi]))
@@ -120,25 +128,45 @@ for beta in beta_epi:
 	pl_ls = [key for key in d_epiOR if key[0] == beta]
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
-	plt.plot(xrange(len(d_epiOR[key])), [1] * len(d_epiOR[key]), marker = 'None', color = 'red', linewidth = 2)
+	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('time step, beta: ' + str(beta))
 	plt.ylabel('OR, child:adult')
-	plt.ylim([-3, 30])
-	plt.xlim([-1, 250])
+	plt.ylim([-3, 15])
+	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
-# 	plt.show()
+	plt.show()
 
 ##############################################
 ### plot incidence by time for each beta value ###
-
-
+# each sim is one line
+for beta in beta_epi:
+	pl_ls = [key for key in d_epiincid if key[0] == beta]
+	for key in pl_ls:
+		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
+	plt.xlabel('time step, beta: ' + str(beta))
+	plt.ylabel('number of new cases')
+	plt.xlim([-1, 125])
+	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	plt.savefig(figname)
+	plt.close()
+	plt.show()
 
 ##############################################
 ### plot prevalence by time for each beta value ###
-
-
+# each sim is one line
+for beta in beta_epi:
+	pl_ls = [key for key in d_epipreval if key[0] == beta]
+	for key in pl_ls:
+		plt.plot(xrange(len(d_epipreval[key])), d_epipreval[key], marker = 'None', color = 'grey')
+	plt.xlabel('time step, beta: ' + str(beta))
+	plt.ylabel('total number of cases')
+	plt.xlim([-1, 125])
+	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	plt.savefig(figname)
+	plt.close()
+	plt.show()
 
 ##############################################
 # ### DIAGNOSTICS: number of epidemics ### 
@@ -162,7 +190,7 @@ for beta in beta_epi:
 ### write dictionaries to files ###
 # print epi OR values to file, one file per beta
 for beta in beta_epi:
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_OR_time_to_file(d_epiOR, filename, beta)
 
 
