@@ -30,6 +30,7 @@ from time import clock
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import pretty_print as pp
+import pickle
 
 ## local modules ##
 import percolations as perc
@@ -47,7 +48,7 @@ d_numepi ={} # d_numepi[cov] = number of epidemics produced from that coverage l
 
 ###############################################
 ### parameters ###
-numsims = 4000 # number of simulations
+numsims = 50 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 vaxcovlist = np.linspace(0, .2, num=21, endpoint=True) # vax coverage
 # T = 0.065 # ~20% AR in naive population
@@ -99,8 +100,8 @@ for cov in vaxcovlist:
 	print "simtime, simnum:", clock()-start, "\t", num
 
 	# print binary file of infecteds for each set of cov simulations
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_cov_%ssims_T%.3f_eff%.3f.txt' %(numsims, T, (cov/cov_fixed))
-	pp.print_dictlist_to_file(d_binlist, filename)
+	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_cov_%ssims_T%.3f_eff%.3f.txt' %(numsims, T, (cov/cov_fixed))
+# 	pp.print_dictlist_to_file(d_binlist, filename)
 
 ##############################################
 ### subset: epidemics only ###
@@ -124,53 +125,75 @@ cov_epi = sorted(list(set([key[0] for key in d_simepi])))
 eff_epi = [cov/cov_fixed for cov in cov_epi]
 
 ##############################################
-### RESULTS: OR by vax efficacy w/ error bars ###
-
-# plot
-plt.errorbar(eff_epi, [np.mean(d_epiOR[cov]) for cov in cov_epi], yerr = [np.std(d_epiOR[cov]) for cov in cov_epi], marker = 'o', color = 'black', linestyle = 'None')
-plt.xlabel('random vax efficacy (cov = 0.245)')
-plt.ylabel('OR, child:adult')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.png' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
-plt.savefig(figname)
-plt.close()
-# plt.show()
-
-##############################################
-### DIAGNOSTICS: epidemic size w/ error by T ###
-
-# grab episize info from epidemic results
-for cov in sorted(cov_epi):
-	d_episize[cov] = [d_simepi[key][2] for key in d_simepi if cov == key[0]]
-
-### plot episize by vax efficacy ###
-plt.errorbar(eff_epi, [np.mean(d_episize[cov]) for cov in cov_epi], yerr=[np.std(d_episize[cov]) for cov in cov_epi], marker='o', color='black', linestyle='None')
-plt.xlabel('random vax efficacy (cov = 0.245)')
-plt.ylabel('epidemic size')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/episize_cov_%ssims_T%.3f_eff%.3f-%.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
-plt.savefig(figname)
-plt.close()
-# plt.show()
-
-##############################################
-### DIAGNOSTICS: number of epidemics by T ### 
-
-# grab number of epidemics from epidemic results
-for cov in sorted(cov_epi):
-	d_numepi[cov] = len([d_simepi[key][2] for key in d_simepi if cov == key[0]])
-
-# plot number of epidemics by vax efficacy
-plt.plot(eff_epi, [d_numepi[cov] for cov in cov_epi], marker='o', color='black')
-plt.xlabel('random vax efficacy (cov = 0.245)')
-plt.ylabel('number of epidemics')
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/numepi_cov_%ssims_T%.3f_eff%.3f-%.3f.png' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
-plt.savefig(figname)
-plt.close()
-# plt.show()
-
-##############################################
 ### write dictionaries to files ###
-filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.txt' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
-pp.print_OR_to_file(d_epiOR, filename)
+filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.txt' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+# pp.print_OR_to_file(d_epiOR, filename)
+
+##############################################
+### pickle
+pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/vaxcovlist_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/covepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/effepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_episize_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_simepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pname7 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_numepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+pickle.dump(d_epiOR, open(pname1, "wb"))
+pickle.dump(vaxcovlist, open(pname2, "wb"))
+pickle.dump(cov_epi, open(pname3, "wb"))
+pickle.dump(eff_epi, open(pname4, "wb"))
+pickle.dump(d_episize, open(pname5, "wb"))
+pickle.dump(d_simepi, open(pname6, "wb"))
+pickle.dump(d_numepi, open(pname7, "wb"))
+
+########################################################
+# instead of using below code, use age_perc_vaxcov_viz.py module
+
+# ##############################################
+# ### RESULTS: OR by vax efficacy w/ error bars ###
+#
+# # plot
+# plt.errorbar(eff_epi, [np.mean(d_epiOR[cov]) for cov in cov_epi], yerr = [np.std(d_epiOR[cov]) for cov in cov_epi], marker = 'o', color = 'black', linestyle = 'None')
+# plt.xlabel('random vax efficacy (cov = 0.245)')
+# plt.ylabel('OR, child:adult')
+# figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.png' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+# plt.savefig(figname)
+# plt.close()
+# # plt.show()
+#
+# ##############################################
+# ### DIAGNOSTICS: epidemic size w/ error by T ###
+#
+# # grab episize info from epidemic results
+# for cov in sorted(cov_epi):
+# 	d_episize[cov] = [d_simepi[key][2] for key in d_simepi if cov == key[0]]
+#
+# ### plot episize by vax efficacy ###
+# plt.errorbar(eff_epi, [np.mean(d_episize[cov]) for cov in cov_epi], yerr=[np.std(d_episize[cov]) for cov in cov_epi], marker='o', color='black', linestyle='None')
+# plt.xlabel('random vax efficacy (cov = 0.245)')
+# plt.ylabel('epidemic size')
+# figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/episize_cov_%ssims_T%.3f_eff%.3f-%.3f.png'%(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+# plt.savefig(figname)
+# plt.close()
+# # plt.show()
+#
+# ##############################################
+# ### DIAGNOSTICS: number of epidemics by T ### 
+#
+# # grab number of epidemics from epidemic results
+# for cov in sorted(cov_epi):
+# 	d_numepi[cov] = len([d_simepi[key][2] for key in d_simepi if cov == key[0]])
+#
+# # plot number of epidemics by vax efficacy
+# plt.plot(eff_epi, [d_numepi[cov] for cov in cov_epi], marker='o', color='black')
+# plt.xlabel('random vax efficacy (cov = 0.245)')
+# plt.ylabel('number of epidemics')
+# figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/numepi_cov_%ssims_T%.3f_eff%.3f-%.3f.png' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+# plt.savefig(figname)
+# plt.close()
+# # plt.show()
+
+
 
 
 
