@@ -132,14 +132,12 @@ filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Resu
 ##############################################
 ### pickle
 pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
-pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/vaxcovlist_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/covepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/effepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_episize_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_simepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname7 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_numepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pickle.dump(d_epiOR, open(pname1, "wb"))
-pickle.dump(vaxcovlist, open(pname2, "wb"))
 pickle.dump(cov_epi, open(pname3, "wb"))
 pickle.dump(eff_epi, open(pname4, "wb"))
 pickle.dump(d_episize, open(pname5, "wb"))

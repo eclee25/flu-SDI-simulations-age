@@ -36,14 +36,12 @@ cov_fixed = 0.245 # reference value for OR vs vaxeff plot
 
 ### import pickled data ###
 pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
-pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/vaxcovlist_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/covepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/effepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_episize_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_simepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 pname7 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_numepi_cov_%ssims_T%.3f_eff%.3f-%.3f' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 d_epiOR = pickle.load(open(pname1, "rb"))
-vaxcovlist = pickle.load(open(pname2, "rb"))
 cov_epi = pickle.load(open(pname3, "rb"))
 eff_epi = pickle.load(open(pname4, "rb"))
 d_episize = pickle.load(open(pname5, "rb"))
