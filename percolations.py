@@ -180,34 +180,34 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	tstep = 0
 	infected_tstep = [p_zero]
 
+	# count to keep track of incidence
+	incid_ct = 1
+	
 	# tot_incidlist is a list of total incidence for each time step
 	tot_incidlist = [len(infected_tstep)]
 	# tot_prevallist is a list of total prevalence for each time step
 	tot_prevallist = [len(infected_tstep)]
 	# ORlist is a list of ORs for each time step
 	ORlist = []
-	
 
 	## simulation ##
 	while infected_tstep:
 		tstep += 1
 		
+				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's']
 		for u in suscep_tstep:
 			# states[u] == 's' condition is extraneous
 			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
 				states[u] = 'i'
-		
-		# count to keep track of incidence
-		incid_ct = 0
+				incid_ct += 1
 
 		# I to R
 		for v in infected_tstep:
 			# states[v] == 'i' condition is extraneous
 			if states[v] == 'i' and rnd.random() < gamma:
 				states[v] = 'r'
-				incid_ct += 1
 		
 		# lists infected nodes for next tstep
 		infected_tstep = [node for node in states if states[node] == 'i']
@@ -217,7 +217,10 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 		
 		# track total prevalence for each time step
 		tot_prevallist.append(len(infected_tstep))
-
+		
+		# track cumulative number of infections in epidemic
+		cum_infected_ct += len(infected_tstep)
+		
 		# return a list of ORs for each time step
 		OR = calc_OR_from_list(dict_node_age, infected_tstep)
 		ORlist.append(OR)
@@ -235,6 +238,8 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
 	# 3) infected adults
 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
+
+	# 4) 
 
 	### return data structures ###
 	return rec_child_n, rec_adult_n, len(recovered), inf_sim_blist, ORlist, tot_incidlist, tot_prevallist
@@ -270,8 +275,20 @@ def calc_OR_from_list(dict_node_age, infected_nodelist):
 	# return value
 	return OR
 
-
-
+####################################################
+def filter_time_points(tot_incidlist, recovered incl_min, incl_max):
+	""" In a time-based epidemic simulation, filter OR data points that may not be valid due to the small number of infected individuals at the beginning and end of an epidemic. For each simulation, define this period as the time period between which the percentage of infecteds is incl_min (float between 0 and 1) and incl_max (float between 0 and 1) percent of the cumulative epidemic size for that simulation. """
+	
+	# list of included time steps
+	incl_tsteps = []
+	
+	for ct in xrange(len(tot_incidlist)):
+		# calculate cumulative number of cases at each time step
+		cum_ct = float(sum(tot_incid[:(ct+1)]))
+		if cum_ct/len(recovered) > incl_min and cum_ct/len(recovered) < incl_max:
+			incl_tsteps.append(ct)
+	
+	return min(incl_tsteps), max(incl_tsteps)
 
 
 
