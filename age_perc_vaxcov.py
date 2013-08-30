@@ -126,7 +126,7 @@ eff_epi = [cov/cov_fixed for cov in cov_epi]
 
 ##############################################
 ### write dictionaries to files ###
-filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.txt' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
+filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_cov_%ssims_T%.3f_eff%.3f-%.3f.txt' %(numsims, T, (min(vaxcovlist)/cov_fixed), (max(vaxcovlist)/cov_fixed))
 # pp.print_OR_to_file(d_epiOR, filename)
 
 ##############################################

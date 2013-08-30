@@ -127,7 +127,7 @@ beta_epi = list(set([key[0] for key in d_simepi]))
 ### write dictionaries to files ###
 # print epi OR values to file, one file per beta
 for beta in beta_epi:
-	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 # 	pp.print_OR_time_to_file(d_epiOR, filename, beta)
 
 ##############################################
