@@ -47,7 +47,7 @@ d_simpreval = defaultdict(list) # prevalence for each time step for all sims
 d_epipreval = defaultdict(list) # prevalence for each time step for epidemics only
 
 ### parameters ###
-numsims = 2 # number of simulations
+numsims = 1000 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -141,7 +141,8 @@ pickle.dump(d_epiincid, open(pname2, "wb"))
 pickle.dump(d_epipreval, open(pname3, "wb"))
 pickle.dump(beta_epi, open(pname4, "wb"))
 
-#############################################
+
+########################################################
 # instead of using below code, use age_perc_T_time_viz.py module
 
 ##############################################
