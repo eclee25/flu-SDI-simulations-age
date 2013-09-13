@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 ### pickled data parameters ###
-numsims = 2 # number of simulations
+numsims = 1000 # number of simulations
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
@@ -41,10 +41,12 @@ pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/
 pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 d_epiOR = pickle.load(open(pname1, "rb"))
 d_epiincid = pickle.load(open(pname2, "rb"))
 d_epipreval = pickle.load(open(pname3, "rb"))
 beta_epi = pickle.load(open(pname4, "rb"))
+d_epiOR_filt = pickle.load(open(pname5, "rb"))
 
 ##############################################
 ### plot OR by time for each beta value ###
@@ -59,9 +61,27 @@ for beta in beta_epi:
 	plt.ylim([-3, 15])
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
-	plt.show()
+	plt.savefig(figname)
+	plt.close()
+# 	plt.show()
+
+##############################################
+### plot filtered OR by time for each beta value ###
+# each sim is one line
+for beta in beta_epi:
+	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
+	for key in pl_ls:
+		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
+	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+	plt.xlabel('time step, beta: ' + str(beta) + ', 20-80% cum infections')
+	plt.ylabel('filtered OR, child:adult')
+	plt.ylim([-3, 15])
+	plt.xlim([-1, 125])
+	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORfilt_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	plt.savefig(figname)
+	plt.close()
+# 	plt.show()
+
 
 ##############################################
 ### plot incidence by time for each beta value ###
@@ -74,9 +94,9 @@ for beta in beta_epi:
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
-	plt.show()
+	plt.savefig(figname)
+	plt.close()
+# 	plt.show()
 
 ##############################################
 ### plot prevalence by time for each beta value ###
@@ -89,9 +109,9 @@ for beta in beta_epi:
 	plt.ylabel('total number of cases')
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
-	plt.show()
+	plt.savefig(figname)
+	plt.close()
+# 	plt.show()
 
 
 
