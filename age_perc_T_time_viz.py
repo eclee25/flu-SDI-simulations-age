@@ -61,9 +61,10 @@ for beta in beta_epi:
 	plt.ylim([-3, 15])
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
+# 	plt.savefig(figname)
+# 	plt.close()
 # 	plt.show()
+plt.show() # clear plots for filtered OR
 
 ##############################################
 ### plot filtered OR by time for each beta value ###
@@ -75,7 +76,7 @@ for beta in beta_epi:
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('time step, beta: ' + str(beta) + ', 20-80% cum infections')
 	plt.ylabel('filtered OR, child:adult')
-	plt.ylim([-3, 15])
+	plt.ylim([0, 5])
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORfilt_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
@@ -94,8 +95,8 @@ for beta in beta_epi:
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
+# 	plt.savefig(figname)
+# 	plt.close()
 # 	plt.show()
 
 ##############################################
@@ -109,8 +110,8 @@ for beta in beta_epi:
 	plt.ylabel('total number of cases')
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
+# 	plt.savefig(figname)
+# 	plt.close()
 # 	plt.show()
 
 
