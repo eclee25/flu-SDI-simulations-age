@@ -48,6 +48,8 @@ d_simincid = defaultdict(list) # incidence for each time step for all sims
 d_epiincid = defaultdict(list) # incidence for each time step for epidemics only
 d_simpreval = defaultdict(list) # prevalence for each time step for all sims
 d_epipreval = defaultdict(list) # prevalence for each time step for epidemics only
+d_simOR_tot = {} # d_simOR_tot[(beta, simnumber)] = OR for entire simulation for all results
+d_epiOR_tot = defaultdict(list) # d_epiOR_tot[beta] = list of ORs for all simulations that were epidemics
 
 ### parameters ###
 numsims = 1000  # number of simulations
@@ -85,25 +87,31 @@ c_size, a_size = perc.child_adult_size(d_node_age)
 ### beta simulations ###
 for beta in blist:
 	print "beta value for current simulations:", beta
-	# d_binlist[simnumber] = [list of 0s and 1s in node numbered index - 1 if node was infected in entire simnumber simulation]
-	d_binlist = defaultdict(list) 
+	
+	## save infection and recovery tsteps for each sim
+	# d_save_I_tstep[simnumber] (or d_save_R_tstep) = [time step of infection/recovery where index = node number - 1 else float('nan')]
+	d_save_I_tstep = defaultdict(list) 
+	d_save_R_tstep = defaultdict(list) 
+	
 	for num in xrange(numsims):
 		start = clock()
-		child_rec, adult_rec, total_rec, bin_list, OR_list, tot_incid_list, tot_preval_list, filt_OR_list= perc.episim_age_time(G, d_node_age, beta, gamma)
-		d_binlist[num] = bin_list
+		child_rec, adult_rec, total_rec, OR_list, tot_incid_list, tot_preval_list, filt_OR_list, OR_tot, I_tstep_list, R_tstep_list = perc.episim_age_time(G, d_node_age, beta, gamma)
+		d_save_I_tstep[num] = I_tstep_list
+		d_save_R_tstep[num] = R_tstep_list
 		d_simresults[(beta, num)] = (child_rec, adult_rec, total_rec)
 		d_simOR[(beta, num)] = OR_list
 		d_simincid[(beta, num)] = tot_incid_list
 		d_simpreval[(beta, num)] = tot_preval_list
 		d_simOR_filt[(beta, num)] = filt_OR_list
+		d_simOR_tot[(beta, num)] = OR_tot
 		print "simtime, simnum:", clock()-start, "\t", num
 
-# save the infecteds by time step? what format is best?
-
-	# print binary file of infecteds for each set of T simulations
-	# order of simulations in dictionary doesn't matter
-	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/binlist_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
-	pp.print_dictlist_to_file(d_binlist, filename)
+	# print tsteps of infection and recovery to be able to recreate sim
+	# sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
+	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
+	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/Rtstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 
 
 ##############################################
@@ -119,6 +127,7 @@ for key in d_simepi:
 	d_epiincid[key] = d_simincid[key]
 	d_epipreval[key] = d_simpreval[key]
 	d_epiOR_filt[key] = d_simOR_filt[key]
+	d_epiOR_tot[key[0]].append(d_simOR_tot[key])
 
 # grab unique list of betas that produced at least one epidemic
 beta_epi = list(set([key[0] for key in d_simepi]))
@@ -131,7 +140,7 @@ beta_epi = list(set([key[0] for key in d_simepi]))
 ### write dictionaries to files ###
 # print epi OR values to file, one file per beta
 for beta in beta_epi:
-	filename = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_OR_time_to_file(d_epiOR, filename, beta)
 
 ##############################################
@@ -141,16 +150,17 @@ pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/
 pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pickle.dump(d_epiOR, open(pname1, "wb"))
 pickle.dump(d_epiincid, open(pname2, "wb"))
 pickle.dump(d_epipreval, open(pname3, "wb"))
 pickle.dump(beta_epi, open(pname4, "wb"))
 pickle.dump(d_epiOR_filt, open(pname5, "wb"))
-
+pickle.dump(d_epiOR_tot, open(pname6, "wb"))
 
 
 ########################################################
-# instead of using below code, use age_perc_T_time_viz.py module
+# instead of plotting in this script, use age_perc_T_time_viz.py module
 
 ##############################################
 ### plot OR by time for each beta value ###

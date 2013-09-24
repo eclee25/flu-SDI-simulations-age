@@ -182,6 +182,13 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	# time steps begin at 0
 	tstep = 0
 	infected_tstep = [p_zero]
+	
+	# record infection timestep for patient zero
+	I_tstep_savelist = [float('nan') for n in G.order()]
+	I_tstep_savelist[int(p_zero)-1] = tstep # node 1 will be in column index 0 (nodes number from 1 to 10304)
+	
+	# create list to record recovery timesteps
+	R_tstep_savelist = [float('nan') for n in G.order()]
 
 	# tot_incidlist is a list of total incidence for each time step
 	tot_incidlist = [len(infected_tstep)]
@@ -190,7 +197,7 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	# ORlist is a list of ORs for each time step
 	ORlist = []
 
-	## simulation ##
+### simulation ###
 	while infected_tstep:
 		tstep += 1
 				
@@ -204,34 +211,33 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
 				states[u] = 'i'
 				incid_ct += 1
+				# save infection time step: one col per node, one sim per row
+				I_tstep_savelist[int(u)-1] = tstep
 
 		# I to R
 		for v in infected_tstep:
 			# states[v] == 'i' condition is extraneous
 			if states[v] == 'i' and rnd.random() < gamma:
 				states[v] = 'r'
+				# save recovery time step: one col per node, one sim per row
+				R_tstep_savelist[int(v)-1] = tstep
 		
-		# lists infected nodes for next tstep
+		# update list of currently infected nodes for next tstep
 		infected_tstep = [node for node in states if states[node] == 'i']
 		
-		# track total incidence for each time step
+### metrics by time step ###
+		# 1) track total incidence for each time step
 		tot_incidlist.append(incid_ct)
 		
-		# track total prevalence for each time step
+		# 2) track total prevalence for each time step
 		tot_prevallist.append(len(infected_tstep))
 			
-		# return a list of ORs for each time step
+		# 3) return a list of ORs for each time step
 		OR = calc_OR_from_list(dict_node_age, infected_tstep)
 		ORlist.append(OR)
 
 ### metrics over entire simulation ###
-
-	# 1) return binary list of ordered number nodes that were infected over entire simulation
-	inf_sim_blist = [0 for n in xrange(G.order())]
-	recovered = [node for node in states if states[node] == 'r']
-	for node in recovered:
-		# subtract 1 from node number because indexing begins with zero (eg. node 1 is in the 0th place in the list)
-		inf_sim_blist[int(node) - 1] = 1
+	# 1) For list of nodes that were infected over the entire simulation, look at indexes in I_tstep_savelist or R_tstep_savelist that are not float('nan')s. Remember that index = node number - 1
 	
 	# 2) infected children
 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
@@ -242,8 +248,12 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	min_tstep, max_tstep = filter_time_points(tot_incidlist, recovered, incl_min, incl_max)
 	filtered_ORlist = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(ORlist)]
 
+	# 5) total OR value
+	ORval_total = calc_OR_from_list(dict_node_age, recovered)
+
+
 	### return data structures ###
-	return rec_child_n, rec_adult_n, len(recovered), inf_sim_blist, ORlist, tot_incidlist, tot_prevallist, filtered_ORlist
+	return rec_child_n, rec_adult_n, len(recovered), ORlist, tot_incidlist, tot_prevallist, filtered_ORlist, ORval_total, I_tstep_savelist, R_tstep_savelist
 
 
 ####################################################

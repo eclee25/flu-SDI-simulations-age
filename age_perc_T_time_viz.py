@@ -27,6 +27,9 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 
+### plotting settings ###
+colorvec = ['black', 'red', 'orange', 'gold', 'green', 'blue', 'cyan', 'darkviolet', 'hotpink']
+
 ### pickled data parameters ###
 numsims = 1000 # number of simulations
 # gamma = probability of recovery at each time step
@@ -42,11 +45,13 @@ pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/
 pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
 d_epiOR = pickle.load(open(pname1, "rb"))
 d_epiincid = pickle.load(open(pname2, "rb"))
 d_epipreval = pickle.load(open(pname3, "rb"))
 beta_epi = pickle.load(open(pname4, "rb"))
 d_epiOR_filt = pickle.load(open(pname5, "rb"))
+d_epiOR_tot = pickle.load(open(pname6, "rb"))
 
 ##############################################
 ### plot OR by time for each beta value ###
@@ -61,10 +66,9 @@ for beta in beta_epi:
 	plt.ylim([-3, 15])
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
+	plt.savefig(figname)
+	plt.close()
 # 	plt.show()
-plt.show() # clear plots for filtered OR
 
 ##############################################
 ### plot filtered OR by time for each beta value ###
@@ -82,6 +86,37 @@ for beta in beta_epi:
 	plt.savefig(figname)
 	plt.close()
 # 	plt.show()
+# plt.show() # clear plots for next plots
+
+##############################################
+### plot filtered OR by time for all beta values ###
+# each sim is one line, each beta is a diff color on one plot
+for beta in beta_epi:
+	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
+	colvec = colorvec.pop()
+	for key in pl_ls:
+		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = colvec)
+	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+	plt.xlabel('time step, all betas, 20-80% cum infections')
+	plt.ylabel('filtered OR, child:adult')
+	plt.ylim([0, 5])
+	plt.xlim([-1, 150])
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORfilt_beta_time_%ssims_allbetas_vax0.png' %(numsims)
+plt.savefig(figname)
+plt.close()
+# plt.show()
+
+##############################################
+### plot total OR by beta ###
+# one chart for all betas (comparable to OR vs T)
+plt.errorbar(beta_epi, [np.mean(d_epiOR_tot[b]) for b in beta_epi], yerr = [np.std(d_epiOR_tot[b]) for b in beta_epi], marker = 'o', color = 'black', linestyle = 'None')
+plt.xlabel('beta')
+plt.ylabel('OR, child:adult')
+plt.xlim([0.01, 0.06])
+figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORtot_beta_time_%ssims_beta%.3f-%.3f_vax0.png' %(numsims, b1, b2)
+plt.savefig(figname)
+plt.close()
+# plt.show()
 
 
 ##############################################
@@ -95,8 +130,8 @@ for beta in beta_epi:
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
+	plt.savefig(figname)
+	plt.close()
 # 	plt.show()
 
 ##############################################
@@ -110,8 +145,8 @@ for beta in beta_epi:
 	plt.ylabel('total number of cases')
 	plt.xlim([-1, 125])
 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
+	plt.savefig(figname)
+	plt.close()
 # 	plt.show()
 
 

@@ -30,6 +30,7 @@ def print_dictlist_to_file(dic, filename):
 	fwriter = open(filename, 'w+')
 	for k, v in dic.items():
 		str_v = str(v)[1:-1]
+		str_v.replace(" ", "") # remove all internal whitespaces to save disk space
 		fwriter.write('%s\n' % (str_v))
 	fwriter.close()
 
@@ -50,6 +51,13 @@ def print_OR_time_to_file(dic, filename, beta):
 			fwriter.write('%s\n' % (str_v))
 	fwriter.close()
 
+def print_sorteddlist_to_file(dic, filename, numsims):
+	fwriter = open(filename, 'w+')
+	for k in xrange(numsims):
+		str_v = str(dic[k])[1:-1]
+		str_v.replace(" ", "") # remove all internal whitespaces to save disk space
+		fwriter.write('%s\n' % (str_v))
+	fwriter.close()
 			
 			
 			
