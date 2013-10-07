@@ -53,7 +53,7 @@ d_epiOR_tot = defaultdict(list) # d_epiOR_tot[beta] = list of ORs for all simula
 
 ### parameters ###
 numsims = 1000  # number of simulations
-size_epi = 515 # threshold value that designates an epidemic in the network
+size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
@@ -83,6 +83,9 @@ print "network size:", net_size
 c_size, a_size = perc.child_adult_size(d_node_age)
 
 
+### ziparchive to write results ###
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-beta%.3f_vax0.zip' %(numsims, b1, b2)
+
 ###############################################
 ### beta simulations ###
 for beta in blist:
@@ -108,11 +111,13 @@ for beta in blist:
 
 	# print tsteps of infection and recovery to be able to recreate sim
 	# sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
-	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	filename = 'Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
-	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/Rtstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	pp.compress_to_ziparchive(zipname, filename)
+	
+	filename = 'Results/Rtstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
-
+	pp.compress_to_ziparchive(zipname, filename)
 
 ##############################################
 ### subset: epidemics only ###
@@ -140,8 +145,10 @@ beta_epi = list(set([key[0] for key in d_simepi]))
 ### write dictionaries to files ###
 # print epi OR values to file, one file per beta
 for beta in beta_epi:
-	filename = '/home/elee/Documents/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	filename = 'Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
 	pp.print_OR_time_to_file(d_epiOR, filename, beta)
+	pp.compress_to_ziparchive(zipname, filename)
+
 
 ##############################################
 ### pickle

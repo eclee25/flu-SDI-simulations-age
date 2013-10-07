@@ -1,5 +1,8 @@
 # module to print data structures nicely
 
+# dependent packages
+import zipfile
+
 def print_list(l):
 	for value in l:
 		print "%s" % value
@@ -58,6 +61,15 @@ def print_sorteddlist_to_file(dic, filename, numsims):
 		str_v.replace(" ", "") # remove all internal whitespaces to save disk space
 		fwriter.write('%s\n' % (str_v))
 	fwriter.close()
-			
+
+def compress_to_ziparchive(zipname, filename):
+	with zipfile.ZipFile(zipname, 'a') as zf:
+		zf.write(filename, compress_type = zipfile.ZIP_DEFLATED)
+		
+	
+	
+	
+	
+	
 			
 			

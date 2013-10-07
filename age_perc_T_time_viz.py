@@ -9,7 +9,7 @@
 
 ###Import data: 
 
-###Command Line: python age_perc_T_time.py
+###Command Line: python age_perc_T_time_viz.py
 ##############################################
 
 ####### notes #######
@@ -26,12 +26,19 @@
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+import pretty_print as pp
+from collections import defaultdict
+import zipfile
+import percolations as perc
+
 
 ### plotting settings ###
 colorvec = ['black', 'red', 'orange', 'gold', 'green', 'blue', 'cyan', 'darkviolet', 'hotpink']
 
+
 ### pickled data parameters ###
 numsims = 1000 # number of simulations
+size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
@@ -53,6 +60,9 @@ beta_epi = pickle.load(open(pname4, "rb"))
 d_epiOR_filt = pickle.load(open(pname5, "rb"))
 d_epiOR_tot = pickle.load(open(pname6, "rb"))
 
+### ziparchive to read and write results ###
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-beta%.3f_vax0.zip' %(numsims, b1, b2)
+
 ##############################################
 ### plot OR by time for each beta value ###
 # each sim is one line
@@ -65,9 +75,10 @@ for beta in beta_epi:
 	plt.ylabel('OR, child:adult')
 	plt.ylim([-3, 15])
 	plt.xlim([-1, 125])
-	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	figname = 'Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
 # 	plt.show()
 
 ##############################################
@@ -78,15 +89,16 @@ for beta in beta_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, beta: ' + str(beta) + ', 20-80% cum infections')
-	plt.ylabel('filtered OR, child:adult')
+	plt.xlabel('sim time step, beta: ' + str(beta) + ', 10-90% cum infections')
+	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 5])
 	plt.xlim([-1, 125])
-	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORfilt_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	figname = 'Figures/epiORfilt_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
 # 	plt.show()
-# plt.show() # clear plots for next plots
+
 
 ##############################################
 ### plot filtered OR by time for all beta values ###
@@ -97,14 +109,17 @@ for beta in beta_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = colvec)
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, all betas, 20-80% cum infections')
+	plt.xlabel('time step, all betas, 10-90% cum infections')
 	plt.ylabel('filtered OR, child:adult')
 	plt.ylim([0, 5])
 	plt.xlim([-1, 150])
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORfilt_beta_time_%ssims_allbetas_vax0.png' %(numsims)
+figname = 'Figures/epiORfilt_beta_time_%ssims_allbetas_vax0.png' %(numsims)
 plt.savefig(figname)
 plt.close()
+pp.compress_to_ziparchive(zipname, figname)
+
 # plt.show()
+
 
 ##############################################
 ### plot total OR by beta ###
@@ -113,9 +128,10 @@ plt.errorbar(beta_epi, [np.mean(d_epiOR_tot[b]) for b in beta_epi], yerr = [np.s
 plt.xlabel('beta')
 plt.ylabel('OR, child:adult')
 plt.xlim([0.01, 0.06])
-figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiORtot_beta_time_%ssims_beta%.3f-%.3f_vax0.png' %(numsims, b1, b2)
+figname = 'Figures/epiORtot_beta_time_%ssims_beta%.3f-%.3f_vax0.png' %(numsims, b1, b2)
 plt.savefig(figname)
 plt.close()
+pp.compress_to_ziparchive(zipname, figname)
 # plt.show()
 
 
@@ -129,9 +145,10 @@ for beta in beta_epi:
 	plt.xlabel('time step, beta: ' + str(beta))
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 125])
-	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	figname = 'Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
 # 	plt.show()
 
 ##############################################
@@ -144,9 +161,10 @@ for beta in beta_epi:
 	plt.xlabel('time step, beta: ' + str(beta))
 	plt.ylabel('total number of cases')
 	plt.xlim([-1, 125])
-	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	figname = 'Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
 # 	plt.show()
 
 
