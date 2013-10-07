@@ -40,6 +40,10 @@
 import random as rnd
 import numpy as np
 from collections import defaultdict
+import zipfile
+import bisect
+import math
+
 
 
 # functions
@@ -176,7 +180,7 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	states[p_zero] = 'i'
 	
 	# define cumulative percentiles that filter OR time points
-	incl_min, incl_max = 0.2, 0.8
+	incl_min, incl_max = 0.1, 0.9
 	
 	# keep track of infections over time
 	# time steps begin at 0
@@ -184,11 +188,11 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	infected_tstep = [p_zero]
 	
 	# record infection timestep for patient zero
-	I_tstep_savelist = [float('nan') for n in G.order()]
+	I_tstep_savelist = [float('nan') for n in G.nodes()]
 	I_tstep_savelist[int(p_zero)-1] = tstep # node 1 will be in column index 0 (nodes number from 1 to 10304)
 	
 	# create list to record recovery timesteps
-	R_tstep_savelist = [float('nan') for n in G.order()]
+	R_tstep_savelist = [float('nan') for n in G.nodes()]
 
 	# tot_incidlist is a list of total incidence for each time step
 	tot_incidlist = [len(infected_tstep)]
@@ -238,7 +242,7 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 
 ### metrics over entire simulation ###
 	# 1) For list of nodes that were infected over the entire simulation, look at indexes in I_tstep_savelist or R_tstep_savelist that are not float('nan')s. Remember that index = node number - 1
-	
+	recovered = [node for node in states if states[node] == 'r']
 	# 2) infected children
 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
 	# 3) infected adults
@@ -304,11 +308,78 @@ def filter_time_points(tot_incidlist, recovered, incl_min, incl_max):
 	else:
 		return 0, 0
 
+####################################################
+def define_epi_time(dict_epiincid, beta, align_proportion):
+	""" For time-based epidemic simulations, identify the tstep at which the simulation reaches align_proportion proportion of cumulative infections for the epidemic. The goal is to align the epidemic trajectories at the point where the tsteps are comparable for each simulation. Returns dict where key = beta and value = list of tstep at which simulations that reached epidemic sizes attained 5% cumulative infections. """
+	
+	dummykeys = [k for k in dict_epiincid if k[0] == beta]
+	# dict_dummyalign_tstep[beta] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
+	dict_dummyalign_tstep = defaultdict(list)
+	
+	for k in dummykeys:
+		cum_infections = [sum(dict_epiincid[k][:index+1]) for index in xrange(len(dict_epiincid[k]))]
+		prop_cum_infections = [float(item)/cum_infections[-1] for item in cum_infections]
+		dict_dummyalign_tstep[beta].append(bisect.bisect(prop_cum_infections, align_proportion))
+	
+	match_tstep = int(round(np.mean(dict_dummyalign_tstep[beta])))
+	
+	return dict_dummyalign_tstep, match_tstep, dummykeys
 
-
-
-
-
+####################################################
+def recreate_incid(extractfile, zipname, epi_size, child_nodes, adult_nodes):
+	""" For time-based epidemic simulations, recreate age-specific incidence from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns dictionary where .... Note: patient zero will not be counted in incidence. """
+	
+	# calculate sizes of child and adult populations
+	child_size, adult_size = float(sum(child_nodes)), float(sum(adult_nodes))
+	
+	# import output file from ziparchive
+	with zipfile.ZipFile(zipname, 'r') as zf:
+		f = zf.open(extractfile)
+	
+	# dict to store results data
+	dict_Itstep = defaultdict(list)
+	simnumber = 0
+	
+	# import data to dict
+	for line in f:
+		vallist = line.split(',')
+		# dict_Itstep[simnumber] = [node1 infection tstep, node2 infection tstep...]
+		# float('nan') if node was not infected
+		# incorporate only sims where sim reached episize - count number of individuals infected in simulation
+		if sum([0 if math.isnan(float(val)) == True else int(val) for val in vallist]) > epi_size:
+			dict_Itstep[simnumber] = [0 if math.isnan(float(val)) == True else int(val) for val in vallist]
+		simnumber += 1
+	
+	# dict to store child and adult incidence
+	# dict_incid[(simnumber, 'C' or 'A')] = [C or A incid at tstep 0, C or A incid at tstep 1...]
+	dict_incid = defaultdict(list)
+	
+	for simnum in dict_Itstep:
+		# shows child and adult tsteps only - patient zero information will appear as 0
+		c_tsteps = [c*t for c, t in zip(child_nodes, dict_Itstep[simnum])]
+		a_tsteps = [a*t for a, t in zip(adult_nodes, dict_Itstep[simnum])]
+# 		# replace NaNs with 0
+# 		c_tsteps = [0 if tstep == float('nan') else tstep for tstep in c_tsteps]
+# 		a_tsteps = [0 if tstep == float('nan') else tstep for tstep in a_tsteps]
+		
+		# create dummy lists for dict_incid values
+		dummy_c_incid = [0] * np.nanmax(c_tsteps + a_tsteps)
+		dummy_a_incid = [0] * np.nanmax(c_tsteps + a_tsteps)
+	
+		# index of dummy_c_incid is tstep and value of c_tsteps is tstep
+		for t, inf in enumerate(dummy_c_incid):
+			# we lost the information about age of patient zero, so just set incid for children and adults to 0 at t=0
+			if t == 0:
+				dummy_c_incid[t] = 0
+				dummy_a_incid[t] = 0
+			else:
+				dummy_c_incid[t] = sum([True if int(ts) == t else False for ts in c_tsteps])/child_size * 100
+				dummy_a_incid[t] = sum([True if int(ts) == t else False for ts in a_tsteps])/adult_size * 100
+		
+		dict_incid[(simnum, 'C')] = dummy_c_incid
+		dict_incid[(simnum, 'A')] = dummy_a_incid
+	
+	return dict_incid
 
 
 
