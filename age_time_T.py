@@ -58,7 +58,8 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # on avg, assume 5 days till recovery
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
-b1, b2 = (-0.0 * gamma)/(0 - 1), (-0.2 * gamma)/(0.2 - 1) # 0, .05
+T1, T2 = 0.0, 0.2
+b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
 blist = np.linspace(b1, b2, num=11, endpoint=True) # probability of transmission
 
 ### import data ###
