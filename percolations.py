@@ -327,7 +327,9 @@ def define_epi_time(dict_epiincid, beta, align_proportion):
 
 ####################################################
 def recreate_incid(extractfile, zipname, epi_size, child_nodes, adult_nodes):
-	""" For time-based epidemic simulations, recreate age-specific incidence from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns dictionary where .... Note: patient zero will not be counted in incidence. """
+	""" For time-based epidemic simulations, recreate age-specific incidence from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns dictionary with simnumber and age class
+as a tuple key key and values are incidence at each tstep for a single simulation.
+ Note: patient zero will not be counted in incidence. """
 	
 	# calculate sizes of child and adult populations
 	child_size, adult_size = float(sum(child_nodes)), float(sum(adult_nodes))
