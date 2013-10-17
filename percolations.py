@@ -170,7 +170,7 @@ def perc_age_gen(G, dict_node_age, T):
 ####################################################
 # time-based age-structured simulation function 
 def episim_age_time(G, dict_node_age, beta, gamma):
-	''' Time-based age-structured simulation function that returns the number of children, adults, and total infected individuals during the simulation. 
+	''' Time-based age-structured simulation function that returns the number of children, adults, total infected individuals, child to adult attack rate odds ratio at each time step, list of total incidence at each time step, list of total prevalence at each timestep, odds ratio at each time step with a substantial number of infections, OR for entire simulation, infection time step per node, and recovery time step per node during the simulation. 
 	'''
 	
 	# set initial conditions
@@ -261,6 +261,100 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 
 
 ####################################################
+# time-based age-structured simulation function with varying susceptibilities by age group
+def episim_age_time_susc(G, dict_node_age, T, gamma, dict_age_susceptibility):
+	''' Time-based age-structured simulation function that returns the number of children, adults, total infected individuals, child to adult attack rate odds ratio at each time step, list of total incidence at each time step, list of total prevalence at each timestep, odds ratio at each time step with a substantial number of infections, OR for entire simulation, infection time step per node, and recovery time step per node during the simulation. Different susceptibility values may be set for each age group.
+	'''
+	
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()])
+	# Randomly choose one node as patient zero
+	p_zero = rnd.choice(G.nodes()) 
+	states[p_zero] = 'i'
+	
+	# define cumulative percentiles that filter OR time points
+	incl_min, incl_max = 0.1, 0.9
+	
+	# keep track of infections over time
+	# time steps begin at 0
+	tstep = 0
+	infected_tstep = [p_zero]
+	
+	# record infection timestep for patient zero
+	I_tstep_savelist = [float('nan') for n in G.nodes()]
+	I_tstep_savelist[int(p_zero)-1] = tstep # node 1 will be in column index 0 (nodes number from 1 to 10304)
+	
+	# create list to record recovery timesteps
+	R_tstep_savelist = [float('nan') for n in G.nodes()]
+
+	# tot_incidlist is a list of total incidence for each time step
+	tot_incidlist = [len(infected_tstep)]
+	# tot_prevallist is a list of total prevalence for each time step
+	tot_prevallist = [len(infected_tstep)]
+	# ORlist is a list of ORs for each time step
+	ORlist = []
+
+### simulation ###
+	while infected_tstep:
+		tstep += 1
+				
+		# count to keep track of incidence
+		incid_ct = 0
+				
+		# S to I
+		suscep_tstep = [u for u in states if states[u] == 's']
+		for u in suscep_tstep:
+			beta = calculate_beta(T, gamma, u, dict_node_age, dict_age_susceptibility)
+			
+			# states[u] == 's' condition is extraneous
+			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
+				states[u] = 'i'
+				incid_ct += 1
+				# save infection time step: one col per node, one sim per row
+				I_tstep_savelist[int(u)-1] = tstep
+
+		# I to R
+		for v in infected_tstep:
+			# states[v] == 'i' condition is extraneous
+			if states[v] == 'i' and rnd.random() < gamma:
+				states[v] = 'r'
+				# save recovery time step: one col per node, one sim per row
+				R_tstep_savelist[int(v)-1] = tstep
+		
+		# update list of currently infected nodes for next tstep
+		infected_tstep = [node for node in states if states[node] == 'i']
+		
+### metrics by time step ###
+		# 1) track total incidence for each time step
+		tot_incidlist.append(incid_ct)
+		
+		# 2) track total prevalence for each time step
+		tot_prevallist.append(len(infected_tstep))
+			
+		# 3) return a list of ORs for each time step
+		OR = calc_OR_from_list(dict_node_age, infected_tstep)
+		ORlist.append(OR)
+
+### metrics over entire simulation ###
+	# 1) For list of nodes that were infected over the entire simulation, look at indexes in I_tstep_savelist or R_tstep_savelist that are not float('nan')s. Remember that index = node number - 1
+	recovered = [node for node in states if states[node] == 'r']
+	# 2) infected children
+	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
+	# 3) infected adults
+	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
+
+	# 4) OR dict filtered to include only time points with a substantial number of infections
+	min_tstep, max_tstep = filter_time_points(tot_incidlist, recovered, incl_min, incl_max)
+	filtered_ORlist = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(ORlist)]
+
+	# 5) total OR value
+	ORval_total = calc_OR_from_list(dict_node_age, recovered)
+
+
+	### return data structures ###
+	return rec_child_n, rec_adult_n, len(recovered), ORlist, tot_incidlist, tot_prevallist, filtered_ORlist, ORval_total, I_tstep_savelist, R_tstep_savelist
+
+####################################################
 def infected_neighbors(G, node, states):
     """ Calculate the number of infected neighbors for the node. 
 	"""
@@ -292,7 +386,8 @@ def calc_OR_from_list(dict_node_age, infected_nodelist):
 
 ####################################################
 def filter_time_points(tot_incidlist, recovered, incl_min, incl_max):
-	""" In a time-based epidemic simulation, filter OR data points that may not be valid due to the small number of infected individuals at the beginning and end of an epidemic. For each simulation, define this period as the time period between which the percentage of infecteds is incl_min (float between 0 and 1) and incl_max (float between 0 and 1) percent of the cumulative epidemic size for that simulation. """
+	""" In a time-based epidemic simulation, filter OR data points that may not be valid due to the small number of infected individuals at the beginning and end of an epidemic. For each simulation, define this period as the time period between which the percentage of infecteds is incl_min (float between 0 and 1) and incl_max (float between 0 and 1) percent of the cumulative epidemic size for that simulation. 
+	"""
 	
 	# list of included time steps
 	incl_tsteps = []
@@ -310,7 +405,8 @@ def filter_time_points(tot_incidlist, recovered, incl_min, incl_max):
 
 ####################################################
 def define_epi_time(dict_epiincid, beta, align_proportion):
-	""" For time-based epidemic simulations, identify the tstep at which the simulation reaches align_proportion proportion of cumulative infections for the epidemic. The goal is to align the epidemic trajectories at the point where the tsteps are comparable for each simulation. Returns dict where key = beta and value = list of tstep at which simulations that reached epidemic sizes attained 5% cumulative infections. """
+	""" For time-based epidemic simulations, identify the tstep at which the simulation reaches align_proportion proportion of cumulative infections for the epidemic. The goal is to align the epidemic trajectories at the point where the tsteps are comparable for each simulation. Returns dict where key = beta and value = list of tstep at which simulations that reached epidemic sizes attained 5% cumulative infections. 
+	"""
 	
 	dummykeys = [k for k in dict_epiincid if k[0] == beta]
 	# dict_dummyalign_tstep[beta] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
@@ -327,9 +423,8 @@ def define_epi_time(dict_epiincid, beta, align_proportion):
 
 ####################################################
 def recreate_incid(extractfile, zipname, epi_size, child_nodes, adult_nodes):
-	""" For time-based epidemic simulations, recreate age-specific incidence from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns dictionary with simnumber and age class
-as a tuple key key and values are incidence at each tstep for a single simulation.
- Note: patient zero will not be counted in incidence. """
+	""" For time-based epidemic simulations, recreate age-specific incidence from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns dictionary with simnumber and age class as a tuple key and values are incidence at each tstep for a single simulation. Note: patient zero will not be counted in incidence.
+	"""
 	
 	# calculate sizes of child and adult populations
 	child_size, adult_size = float(sum(child_nodes)), float(sum(adult_nodes))
@@ -384,6 +479,18 @@ as a tuple key key and values are incidence at each tstep for a single simulatio
 	return dict_incid
 
 
+####################################################
+def calculate_beta(T, gamma, susc_node, dict_node_age, dict_age_susceptibility):
+	""" Calculate beta for a given susceptible node based on T and a susceptibility value for the susceptible node. Susceptibility values range from 0 (not susceptible at all) to 1 (completely susceptible). Susceptibility values are assigned by age class. This calculation operates under the assumption that T = infectivity * susceptibility.
+	"""
+
+	age_class = dict_node_age[susc_node]
+	T_mod = T * dict_age_susceptibility[age_class]
+	beta_mod = (-T_mod * gamma)/(T_mod - 1)
+	
+	# return beta value based on modified T value
+	return beta_mod
+	
 
 
 
