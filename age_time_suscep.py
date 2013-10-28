@@ -21,6 +21,7 @@
 # '5' - Seniors: 65+ (community)
 # '6' - Elders: 65+ (nursing home)
 # There are only 94 "elders" in the Vancouver network, and they all reside in one nursing home, so they can be combined with the seniors for analysis purposes (all_elderly).
+# T_critical = 0.0565868
 
 ### packages/modules ###
 import networkx as nx
@@ -56,11 +57,11 @@ numsims = 800  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
-gamma = 0.2
-# assume T = 0.0643 (total epidemic size = 20%)
-T = 0.0643
+gamma = 1/float(3) # 3 days recovery here
+T = 0.0643 # total epidemic size = 30%
+# T = 0.075 # with larger T, adult susceptibility of 0.6 will still be greater than T_critical
 # T = beta / (beta + gamma)
-b = (-T * gamma)/(T - 1) # b = 0.0137
+b = (-T * gamma)/(T - 1) # when T = 0.0643, b = 0.0137
 # define different adult susceptibilities
 s1, s2 = 0, 1
 susc_list = np.linspace(s1, s2, num=11, endpoint=True)

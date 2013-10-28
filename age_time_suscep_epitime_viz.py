@@ -44,9 +44,9 @@ numsims = 800  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
-gamma = 0.2
-# assume T = 0.0643 (total epidemic size = 20%)
-T = 0.0643
+gamma = 1/float(3)
+T = 0.0643 # total epidemic size = 30%
+# T = 0.075  # with larger T, adult susceptibility of 0.6 will still be greater than T_critical
 # T = beta / (beta + gamma)
 b = (-T * gamma)/(T - 1) # b = 0.0137
 # define different adult susceptibilities
@@ -104,13 +104,13 @@ for s in susc_epi:
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('epidemic time step, adult suscep: ' + str(s) + ', 10-90% cum infections')
 	plt.ylabel('OR, child:adult')
-	plt.ylim([0, 60])
-	plt.xlim([-1, 200])
+	plt.ylim([0, 20])
+	plt.xlim([-1, 250])
 	figname = 'Figures/epiORalign_susc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
-# 	plt.savefig(figname)
-# 	plt.close()
-# 	pp.compress_to_ziparchive(zipname, figname)
-	plt.show()
+	plt.savefig(figname)
+	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
+# 	plt.show()
 
 ##############################################
 ### plot filtered and aligned OR by time for each suscep value ###
@@ -150,11 +150,11 @@ for s in susc_epi:
 	lines = [OR, child, adult]
 	yax_OR.legend(lines, ['Odds Ratio', 'Child Incidence', 'Adult Incidence'], loc = 'upper right')
 	yax_OR.set_ylabel('OR, child:adult')
-	yax_OR.set_ylim([0, 60])
-	yax_OR.set_xlim([-1, 200])
+	yax_OR.set_ylim([0, 20])
+	yax_OR.set_xlim([-1, 250])
 	yax_OR.set_xlabel('epidemic time step, adult suscep: ' + str(s) + ', 10-90% cum infections')
 	yax_AR.set_ylabel('Incidence per 100')
-	yax_AR.set_ylim([0, 2])
+	yax_AR.set_ylim([0, 4])
 	
 	# save plot
 	figname = 'Figures/epiORincid_susc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)

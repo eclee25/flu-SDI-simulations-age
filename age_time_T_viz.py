@@ -37,14 +37,17 @@ colorvec = ['black', 'red', 'orange', 'gold', 'green', 'blue', 'cyan', 'darkviol
 
 
 ### pickled data parameters ###
-numsims = 1000 # number of simulations
+numsims = 100 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
-b1, b2 = (-0.0 * gamma)/(0 - 1), (-0.2 * gamma)/(0.2 - 1) # 0, .05
-blist = np.linspace(b1, b2, num=11, endpoint=True) # probability of transmission
+# T1, T2 = 0.0, 0.2
+T1, T2 = 0.075, 0.075
+b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
+
+blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
 ### import pickled data ###
 pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
@@ -61,113 +64,124 @@ d_epiOR_filt = pickle.load(open(pname5, "rb"))
 d_epiOR_tot = pickle.load(open(pname6, "rb"))
 
 ### ziparchive to read and write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-beta%.3f_vax0.zip' %(numsims, b1, b2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-%.3f_vax0.zip' %(numsims, b1, b2)
+
+# ##############################################
+# ### plot OR by time for each beta value ###
+# # each sim is one line
+# for beta in beta_epi:
+# 	pl_ls = [key for key in d_epiOR if key[0] == beta]
+# 	for key in pl_ls:
+# 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
+# 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+# 	plt.xlabel('time step, beta: ' + str(beta))
+# 	plt.ylabel('OR, child:adult')
+# 	plt.ylim([-3, 15])
+# 	plt.xlim([-1, 125])
+# 	figname = 'Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+# 	plt.savefig(figname)
+# 	plt.close()
+# 	pp.compress_to_ziparchive(zipname, figname)
+# # 	plt.show()
+#
+# ##############################################
+# ### plot filtered OR by time for each beta value ###
+# # each sim is one line
+# for beta in beta_epi:
+# 	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
+# 	for key in pl_ls:
+# 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
+# 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+# 	plt.xlabel('sim time step, beta: ' + str(beta) + ', 10-90% cum infections')
+# 	plt.ylabel('OR, child:adult')
+# 	plt.ylim([0, 5])
+# 	plt.xlim([-1, 125])
+# 	figname = 'Figures/epiORfilt_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+# 	plt.savefig(figname)
+# 	plt.close()
+# 	pp.compress_to_ziparchive(zipname, figname)
+# # 	plt.show()
+#
+#
+# ##############################################
+# ### plot filtered OR by time for all beta values ###
+# # each sim is one line, each beta is a diff color on one plot
+# for beta in beta_epi:
+# 	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
+# 	colvec = colorvec.pop()
+# 	for key in pl_ls:
+# 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = colvec)
+# 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+# 	plt.xlabel('time step, all betas, 10-90% cum infections')
+# 	plt.ylabel('filtered OR, child:adult')
+# 	plt.ylim([0, 5])
+# 	plt.xlim([-1, 150])
+# figname = 'Figures/epiORfilt_beta_time_%ssims_allbetas_vax0.png' %(numsims)
+# plt.savefig(figname)
+# plt.close()
+# pp.compress_to_ziparchive(zipname, figname)
+#
+# # plt.show()
+#
+#
+# ##############################################
+# ### plot total OR by beta ###
+# # one chart for all betas (comparable to OR vs T)
+# plt.errorbar(beta_epi, [np.mean(d_epiOR_tot[b]) for b in beta_epi], yerr = [np.std(d_epiOR_tot[b]) for b in beta_epi], marker = 'o', color = 'black', linestyle = 'None')
+# plt.xlabel('beta')
+# plt.ylabel('OR, child:adult')
+# plt.xlim([0.01, 0.06])
+# figname = 'Figures/epiORtot_beta_time_%ssims_beta%.3f-%.3f_vax0.png' %(numsims, b1, b2)
+# plt.savefig(figname)
+# plt.close()
+# pp.compress_to_ziparchive(zipname, figname)
+# # plt.show()
+#
+#
+# ##############################################
+# ### plot incidence by time for each beta value ###
+# # each sim is one line
+# for beta in beta_epi:
+# 	pl_ls = [key for key in d_epiincid if key[0] == beta]
+# 	for key in pl_ls:
+# 		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
+# 	plt.xlabel('time step, beta: ' + str(beta))
+# 	plt.ylabel('number of new cases')
+# 	plt.xlim([-1, 125])
+# 	figname = 'Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+# 	plt.savefig(figname)
+# 	plt.close()
+# 	pp.compress_to_ziparchive(zipname, figname)
+# # 	plt.show()
+#
+# ##############################################
+# ### plot prevalence by time for each beta value ###
+# # each sim is one line
+# for beta in beta_epi:
+# 	pl_ls = [key for key in d_epipreval if key[0] == beta]
+# 	for key in pl_ls:
+# 		plt.plot(xrange(len(d_epipreval[key])), d_epipreval[key], marker = 'None', color = 'grey')
+# 	plt.xlabel('time step, beta: ' + str(beta))
+# 	plt.ylabel('total number of cases')
+# 	plt.xlim([-1, 125])
+# 	figname = 'Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+# 	plt.savefig(figname)
+# 	plt.close()
+# 	pp.compress_to_ziparchive(zipname, figname)
+# # 	plt.show()
 
 ##############################################
-### plot OR by time for each beta value ###
-# each sim is one line
+### plot histogram of total episizes for each beta value ###
 for beta in beta_epi:
-	pl_ls = [key for key in d_epiOR if key[0] == beta]
-	for key in pl_ls:
-		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
-	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, beta: ' + str(beta))
-	plt.ylabel('OR, child:adult')
-	plt.ylim([-3, 15])
-	plt.xlim([-1, 125])
-	figname = 'Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+	ARs = [sum(d_epiincid[key]) for key in d_epiincid if key[0] == beta]
+	plt.hist(ARs, 10)
+	plt.ylabel('number of epidemic sims')
+	plt.xlabel('total attack rate, beta: ' + str(beta))
+	figname = 'Figures/episizehist_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
 # 	plt.show()
-
-##############################################
-### plot filtered OR by time for each beta value ###
-# each sim is one line
-for beta in beta_epi:
-	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
-	for key in pl_ls:
-		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
-	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('sim time step, beta: ' + str(beta) + ', 10-90% cum infections')
-	plt.ylabel('OR, child:adult')
-	plt.ylim([0, 5])
-	plt.xlim([-1, 125])
-	figname = 'Figures/epiORfilt_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
-	pp.compress_to_ziparchive(zipname, figname)
-# 	plt.show()
-
-
-##############################################
-### plot filtered OR by time for all beta values ###
-# each sim is one line, each beta is a diff color on one plot
-for beta in beta_epi:
-	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
-	colvec = colorvec.pop()
-	for key in pl_ls:
-		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = colvec)
-	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, all betas, 10-90% cum infections')
-	plt.ylabel('filtered OR, child:adult')
-	plt.ylim([0, 5])
-	plt.xlim([-1, 150])
-figname = 'Figures/epiORfilt_beta_time_%ssims_allbetas_vax0.png' %(numsims)
-plt.savefig(figname)
-plt.close()
-pp.compress_to_ziparchive(zipname, figname)
-
-# plt.show()
-
-
-##############################################
-### plot total OR by beta ###
-# one chart for all betas (comparable to OR vs T)
-plt.errorbar(beta_epi, [np.mean(d_epiOR_tot[b]) for b in beta_epi], yerr = [np.std(d_epiOR_tot[b]) for b in beta_epi], marker = 'o', color = 'black', linestyle = 'None')
-plt.xlabel('beta')
-plt.ylabel('OR, child:adult')
-plt.xlim([0.01, 0.06])
-figname = 'Figures/epiORtot_beta_time_%ssims_beta%.3f-%.3f_vax0.png' %(numsims, b1, b2)
-plt.savefig(figname)
-plt.close()
-pp.compress_to_ziparchive(zipname, figname)
-# plt.show()
-
-
-##############################################
-### plot incidence by time for each beta value ###
-# each sim is one line
-for beta in beta_epi:
-	pl_ls = [key for key in d_epiincid if key[0] == beta]
-	for key in pl_ls:
-		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
-	plt.xlabel('time step, beta: ' + str(beta))
-	plt.ylabel('number of new cases')
-	plt.xlim([-1, 125])
-	figname = 'Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
-	pp.compress_to_ziparchive(zipname, figname)
-# 	plt.show()
-
-##############################################
-### plot prevalence by time for each beta value ###
-# each sim is one line
-for beta in beta_epi:
-	pl_ls = [key for key in d_epipreval if key[0] == beta]
-	for key in pl_ls:
-		plt.plot(xrange(len(d_epipreval[key])), d_epipreval[key], marker = 'None', color = 'grey')
-	plt.xlabel('time step, beta: ' + str(beta))
-	plt.ylabel('total number of cases')
-	plt.xlim([-1, 125])
-	figname = 'Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
-	pp.compress_to_ziparchive(zipname, figname)
-# 	plt.show()
-
-
 
 
 

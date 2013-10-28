@@ -52,15 +52,16 @@ d_simOR_tot = {} # d_simOR_tot[(beta, simnumber)] = OR for entire simulation for
 d_epiOR_tot = defaultdict(list) # d_epiOR_tot[beta] = list of ORs for all simulations that were epidemics
 
 ### parameters ###
-numsims = 1000  # number of simulations
+numsims = 100  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
-T1, T2 = 0.0, 0.2
+# T1, T2 = 0.0, 0.2
+T1, T2 = 0.075, 0.075 # compare to age_time_suscep_viz
 b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
-blist = np.linspace(b1, b2, num=11, endpoint=True) # probability of transmission
+blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
 ### import data ###
 f = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
@@ -85,7 +86,7 @@ c_size, a_size = perc.child_adult_size(d_node_age)
 
 
 ### ziparchive to write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-beta%.3f_vax0.zip' %(numsims, b1, b2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-%.3f_vax0.zip' %(numsims, b1, b2)
 
 ###############################################
 ### beta simulations ###
@@ -108,7 +109,7 @@ for beta in blist:
 		d_simpreval[(beta, num)] = tot_preval_list
 		d_simOR_filt[(beta, num)] = filt_OR_list
 		d_simOR_tot[(beta, num)] = OR_tot
-		print "simtime, simnum:", clock()-start, "\t", num
+		print "simtime, simnum, episize:", clock()-start, "\t", num, "\t", total_rec
 
 	# print tsteps of infection and recovery to be able to recreate sim
 	# sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
