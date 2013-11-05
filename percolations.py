@@ -210,24 +210,25 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's']
-		for u in suscep_tstep:
-			# states[u] == 's' condition is extraneous
-			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
-				states[u] = 'i'
-				incid_ct += 1
-				# save infection time step: one col per node, one sim per row
-				I_tstep_savelist[int(u)-1] = tstep
+		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states)))]
+		for inf in new_infected:
+			I_tstep_savelist[int(u)-1] = tstep
 
 		# I to R
-		for v in infected_tstep:
-			# states[v] == 'i' condition is extraneous
-			if states[v] == 'i' and rnd.random() < gamma:
-				states[v] = 'r'
-				# save recovery time step: one col per node, one sim per row
-				R_tstep_savelist[int(v)-1] = tstep
-		
+		new_recovered = [v for v in infected_tstep if rnd.random() < gamma]
+		for rec in new_recovered:
+			R_tstep_savelist[int(rec) - 1] = tstep
+
 		# update list of currently infected nodes for next tstep
-		infected_tstep = [node for node in states if states[node] == 'i']
+		infected_tstep = infected_tstep + new_infected
+		infected_tstep = [inf for inf in infected_tstep if inf not in new_recovered]
+		# update states dictionary
+		for new_i in new_infected:
+			states[new_i] = 'i'
+		for new_r in new_recovered:
+			states[new_r] = 'r'
+		
+		incid_ct = len(new_infected)
 		
 ### metrics by time step ###
 		# 1) track total incidence for each time step
