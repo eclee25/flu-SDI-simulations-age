@@ -178,10 +178,7 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	# Randomly choose one node as patient zero
 	p_zero = rnd.choice(G.nodes()) 
 	states[p_zero] = 'i'
-	
-	# define cumulative percentiles that filter OR time points
-	incl_min, incl_max = 0.1, 0.9
-	
+		
 	# keep track of infections over time
 	# time steps begin at 0
 	tstep = 0
@@ -193,13 +190,6 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	
 	# create list to record recovery timesteps
 	R_tstep_savelist = [float('nan') for n in G.nodes()]
-
-	# tot_incidlist is a list of total incidence for each time step
-	tot_incidlist = [len(infected_tstep)]
-	# tot_prevallist is a list of total prevalence for each time step
-	tot_prevallist = [len(infected_tstep)]
-	# ORlist is a list of ORs for each time step
-	ORlist = []
 
 ### simulation ###
 	while infected_tstep:
@@ -227,38 +217,42 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 			states[new_i] = 'i'
 		for new_r in new_recovered:
 			states[new_r] = 'r'
-		
-		incid_ct = len(new_infected)
-		
-### metrics by time step ###
-		# 1) track total incidence for each time step
-		tot_incidlist.append(incid_ct)
-		
-		# 2) track total prevalence for each time step
-		tot_prevallist.append(len(infected_tstep))
-			
-		# 3) return a list of ORs for each time step
-		OR = calc_OR_from_list(dict_node_age, infected_tstep)
-		ORlist.append(OR)
-
-### metrics over entire simulation ###
-	# 1) For list of nodes that were infected over the entire simulation, look at indexes in I_tstep_savelist or R_tstep_savelist that are not float('nan')s. Remember that index = node number - 1
+	
+	# report total epidemic size
 	recovered = [node for node in states if states[node] == 'r']
-	# 2) infected children
-	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
-	# 3) infected adults
-	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
 
-	# 4) OR dict filtered to include only time points with a substantial number of infections
-	min_tstep, max_tstep = filter_time_points(tot_incidlist, recovered, incl_min, incl_max)
-	filtered_ORlist = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(ORlist)]
-
-	# 5) total OR value
-	ORval_total = calc_OR_from_list(dict_node_age, recovered)
+# move to data processing
+# ### metrics by time step ###
+# 		# 1) track total incidence for each time step
+# 		tot_incidlist.append(incid_ct)
+# 		
+# 		# 2) track total prevalence for each time step
+# 		tot_prevallist.append(len(infected_tstep))
+# 			
+# 		# 3) return a list of ORs for each time step
+# 		OR = calc_OR_from_list(dict_node_age, infected_tstep)
+# 		ORlist.append(OR)
+#
+# ### metrics over entire simulation ###
+# 	# 1) For list of nodes that were infected over the entire simulation, look at indexes in I_tstep_savelist or R_tstep_savelist that are not float('nan')s. Remember that index = node number - 1
+# 	recovered = [node for node in states if states[node] == 'r']
+# 	# 2) infected children
+# 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
+# 	# 3) infected adults
+# 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
+#
+# 	# 4) OR dict filtered to include only time points with a substantial number of infections
+	# define cumulative percentiles that filter OR time points
+# 	incl_min, incl_max = 0.1, 0.9
+# 	min_tstep, max_tstep = filter_time_points(tot_incidlist, recovered, incl_min, incl_max)
+# 	filtered_ORlist = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(ORlist)]
+#
+# 	# 5) total OR value
+# 	ORval_total = calc_OR_from_list(dict_node_age, recovered)
 
 
 	### return data structures ###
-	return rec_child_n, rec_adult_n, len(recovered), ORlist, tot_incidlist, tot_prevallist, filtered_ORlist, ORval_total, I_tstep_savelist, R_tstep_savelist
+	return len(recovered), I_tstep_savelist, R_tstep_savelist
 
 
 ####################################################

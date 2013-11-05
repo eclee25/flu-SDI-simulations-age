@@ -65,15 +65,15 @@ b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
 blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
 ### import data ###
-f = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
-file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
+graph = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
+graph_ages = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
 
 ### construct age-structured network ###
 G=nx.Graph()
-for edge in f:
+for edge in graph:
     G.add_edge(*edge.strip().split(','))
 
-for line in file2:
+for line in graph_ages:
     new_line = line.split()
     for line in new_line:
         node, age = line.split(',')
@@ -101,15 +101,10 @@ for beta in blist:
 	
 	for num in xrange(numsims):
 		start = clock()
-		child_rec, adult_rec, total_rec, OR_list, tot_incid_list, tot_preval_list, filt_OR_list, OR_tot, I_tstep_list, R_tstep_list = perc.episim_age_time(G, d_node_age, beta, gamma)
+		# 11/5/13 reduced outputs of simulation
+		total_rec, I_tstep_list, R_tstep_list = perc.episim_age_time(G, d_node_age, beta, gamma)
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
-		d_simresults[(beta, num)] = (child_rec, adult_rec, total_rec)
-		d_simOR[(beta, num)] = OR_list
-		d_simincid[(beta, num)] = tot_incid_list
-		d_simpreval[(beta, num)] = tot_preval_list
-		d_simOR_filt[(beta, num)] = filt_OR_list
-		d_simOR_tot[(beta, num)] = OR_tot
 		print "simtime, simnum, episize:", clock()-start, "\t", num, "\t", total_rec
 
 	# print tsteps of infection and recovery to be able to recreate sim
@@ -122,100 +117,31 @@ for beta in blist:
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 
-##############################################
-### subset: epidemics only ###
-# # subset epidemics from all results
-# key = (beta, simnumber), value = (child_rec, adult_rec, total_rec)
-d_simepi = perc.epidemicsonly(d_simresults, size_epi)
 
-# subset OR/incidence/prevalence values that produced epidemics
-# key = (beta, simnumber), value = [ORs/new cases/total cases/filtered ORs at different timesteps]
-for key in d_simepi:
-	d_epiOR[key] = d_simOR[key]
-	d_epiincid[key] = d_simincid[key]
-	d_epipreval[key] = d_simpreval[key]
-	d_epiOR_filt[key] = d_simOR_filt[key]
-	d_epiOR_tot[key[0]].append(d_simOR_tot[key])
-
-# grab unique list of betas that produced at least one epidemic
-beta_epi = list(set([key[0] for key in d_simepi]))
-
-##############################################
-### calculate avg OR for each time point
-
-
-##############################################
-### write dictionaries to files ###
-# print epi OR values to file, one file per beta
-for beta in beta_epi:
-	filename = 'Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
-	pp.print_OR_time_to_file(d_epiOR, filename, beta)
-	pp.compress_to_ziparchive(zipname, filename)
-
-
-##############################################
-### pickle
-pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pickle.dump(d_epiOR, open(pname1, "wb"))
-pickle.dump(d_epiincid, open(pname2, "wb"))
-pickle.dump(d_epipreval, open(pname3, "wb"))
-pickle.dump(beta_epi, open(pname4, "wb"))
-pickle.dump(d_epiOR_filt, open(pname5, "wb"))
-pickle.dump(d_epiOR_tot, open(pname6, "wb"))
-
-
-########################################################
-# instead of plotting in this script, use age_perc_T_time_viz.py module
-
-##############################################
-### plot OR by time for each beta value ###
-# # each sim is one line
-# for beta in beta_epi:
-# 	pl_ls = [key for key in d_epiOR if key[0] == beta]
-# 	for key in pl_ls:
-# 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
-# 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-# 	plt.xlabel('time step, beta: ' + str(beta))
-# 	plt.ylabel('OR, child:adult')
-# 	plt.ylim([-3, 15])
-# 	plt.xlim([-1, 125])
-# 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiOR_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
-# 	plt.show()
+#
 #
 # ##############################################
-# ### plot incidence by time for each beta value ###
-# # each sim is one line
+# ### write dictionaries to files ###
+# # print epi OR values to file, one file per beta
 # for beta in beta_epi:
-# 	pl_ls = [key for key in d_epiincid if key[0] == beta]
-# 	for key in pl_ls:
-# 		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
-# 	plt.xlabel('time step, beta: ' + str(beta))
-# 	plt.ylabel('number of new cases')
-# 	plt.xlim([-1, 125])
-# 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epiincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
-# 	plt.show()
+# 	filename = 'Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+# 	pp.print_OR_time_to_file(d_epiOR, filename, beta)
+# 	pp.compress_to_ziparchive(zipname, filename)
+#
 #
 # ##############################################
-# ### plot prevalence by time for each beta value ###
-# # each sim is one line
-# for beta in beta_epi:
-# 	pl_ls = [key for key in d_epipreval if key[0] == beta]
-# 	for key in pl_ls:
-# 		plt.plot(xrange(len(d_epipreval[key])), d_epipreval[key], marker = 'None', color = 'grey')
-# 	plt.xlabel('time step, beta: ' + str(beta))
-# 	plt.ylabel('total number of cases')
-# 	plt.xlim([-1, 125])
-# 	figname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Figures/epipreval_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-# 	plt.savefig(figname)
-# 	plt.close()
-# 	plt.show()
+# ### pickle
+# pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+# pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+# pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+# pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+# pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+# pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
+# pickle.dump(d_epiOR, open(pname1, "wb"))
+# pickle.dump(d_epiincid, open(pname2, "wb"))
+# pickle.dump(d_epipreval, open(pname3, "wb"))
+# pickle.dump(beta_epi, open(pname4, "wb"))
+# pickle.dump(d_epiOR_filt, open(pname5, "wb"))
+# pickle.dump(d_epiOR_tot, open(pname6, "wb"))
+
 
