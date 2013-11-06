@@ -184,12 +184,15 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	tstep = 0
 	infected_tstep = [p_zero]
 	
+	# number of nodes in graph
+	N = int(G.order())
+	
 	# record infection timestep for patient zero
-	I_tstep_savelist = [float('nan') for n in G.nodes()]
+	I_tstep_savelist = [0] * N
 	I_tstep_savelist[int(p_zero)-1] = tstep # node 1 will be in column index 0 (nodes number from 1 to 10304)
 	
 	# create list to record recovery timesteps
-	R_tstep_savelist = [float('nan') for n in G.nodes()]
+	R_tstep_savelist = [0] * N
 
 ### simulation ###
 	while infected_tstep:

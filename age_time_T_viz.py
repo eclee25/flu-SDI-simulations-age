@@ -23,20 +23,20 @@
 # There are only 94 "elders" in the Vancouver network, and they all reside in one nursing home, so they can be combined with the seniors for analysis purposes (all_elderly).
 
 ### packages/modules ###
-import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import pretty_print as pp
 from collections import defaultdict
 import zipfile
 import percolations as perc
+import math
 
 
 ### plotting settings ###
 colorvec = ['black', 'red', 'orange', 'gold', 'green', 'blue', 'cyan', 'darkviolet', 'hotpink']
 
 
-### pickled data parameters ###
+### data parameters ###
 numsims = 100 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
@@ -44,27 +44,79 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
 # T1, T2 = 0.0, 0.2
-T1, T2 = 0.075, 0.075
+# T1, T2 = 0.075, 0.075
+T1, T2 = 0.0643, 0.0643
 b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
-
 blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
-### import pickled data ###
-pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-d_epiOR = pickle.load(open(pname1, "rb"))
-d_epiincid = pickle.load(open(pname2, "rb"))
-d_epipreval = pickle.load(open(pname3, "rb"))
-beta_epi = pickle.load(open(pname4, "rb"))
-d_epiOR_filt = pickle.load(open(pname5, "rb"))
-d_epiOR_tot = pickle.load(open(pname6, "rb"))
+# data structures
+# d_Itstep[(beta, simnumber)] = [infection tstep for node 1, infection tstep for node 2, ...]
+d_Itstep = defaultdict(list)
+# d_Rtstep[(beta, simnumber)] = [recovery tstep for node 1, recovery tstep for node 2, ...]
+d_Rtstep = defaultdict(list)
+# d_node_age[str(node)] = age class
+d_node_age = {}
 
 ### ziparchive to read and write results ###
 zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-%.3f_vax0.zip' %(numsims, b1, b2)
+
+graph_ages = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
+
+for line in graph_ages:
+    new_line = line.split()
+    for line in new_line:
+        node, age = line.split(',')
+        d_node_age[node] = age # node-ageclass dictionary
+
+
+##############################################
+# data processing - convert tstep info to these dictionaries
+for beta in blist:
+	# reference filenames in zipfolder
+	Itstep_file = 'Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	Rtstep_file = 'Results/Rtstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	# open ziparchive
+	with zipfile.ZipFile(zipname, 'r') as zf:
+		simnumber = 0
+		# open files in ziparchive
+		Itstep = zf.open(Itstep_file, 'r')
+		Rtstep = zf.open(Rtstep_file, 'r')
+		for line1, line2 in zip(Itstep, Rtstep):
+			print line1
+			d_Itstep[(beta, simnumber)] = [int(t) if int(t) else 0 for t in line1.split(', ')]
+			d_Rtstep[(beta, simnumber)] = [0 if t == 'nan' else int(t) for t in line2.split(', ')]
+			simnumber += 1
+
+print d_Itstep.values()
+
+# ch = [1 if d_node_age[str(node)] == '3' else 0 for node in xrange(1, int(net_size) + 1)]
+# ad = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, int(net_size) + 1)]
+#
+# d_incid, d_OR, d_simresults = recreate_simdata(extractfile, zipname, size_epi, 
+#
+# d_simresults[(beta, num)] = (child_rec, adult_rec, total_rec)
+# 		d_simOR[(beta, num)] = OR_list
+# 		d_simincid[(beta, num)] = tot_incid_list
+# 		d_simpreval[(beta, num)] = tot_preval_list
+# 		d_simOR_filt[(beta, num)] = filt_OR_list
+# 		d_simOR_tot[(beta, num)] = OR_tot
+#
+# ## subset: epidemics only ###
+# # # subset epidemics from all results
+# # key = (beta, simnumber), value = (child_rec, adult_rec, total_rec)
+# d_simepi = perc.epidemicsonly(d_simresults, size_epi)
+#
+# # subset OR/incidence/prevalence values that produced epidemics
+# # key = (beta, simnumber), value = [ORs/new cases/total cases/filtered ORs at different timesteps]
+# for key in d_simepi:
+# 	d_epiOR[key] = d_simOR[key]
+# 	d_epiincid[key] = d_simincid[key]
+# 	d_epipreval[key] = d_simpreval[key]
+# 	d_epiOR_filt[key] = d_simOR_filt[key]
+# 	d_epiOR_tot[key[0]].append(d_simOR_tot[key])
+#
+# # grab unique list of betas that produced at least one epidemic
+# beta_epi = list(set([key[0] for key in d_simepi]))
 
 # ##############################################
 # ### plot OR by time for each beta value ###

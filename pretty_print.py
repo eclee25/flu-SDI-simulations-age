@@ -65,9 +65,7 @@ def print_sorteddlist_to_file(dic, filename, numsims):
 def compress_to_ziparchive(zipname, filename):
 	with zipfile.ZipFile(zipname, 'a') as zf:
 		zf.write(filename, compress_type = zipfile.ZIP_DEFLATED)
-		
-	
-	
+
 	
 	
 	
