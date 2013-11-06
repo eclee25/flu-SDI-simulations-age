@@ -23,7 +23,6 @@
 # There are only 94 "elders" in the Vancouver network, and they all reside in one nursing home, so they can be combined with the seniors for analysis purposes (all_elderly).
 
 ### packages/modules ###
-import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import pretty_print as pp
@@ -31,6 +30,7 @@ from collections import defaultdict
 import zipfile
 import percolations as perc
 import bisect
+import math
 
 
 ### plotting settings ###

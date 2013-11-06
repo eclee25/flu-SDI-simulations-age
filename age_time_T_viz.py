@@ -60,6 +60,9 @@ d_node_age = {}
 ### ziparchive to read and write results ###
 zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-%.3f_vax0.zip' %(numsims, b1, b2)
 
+#############################################
+# age data processing
+
 graph_ages = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
 
 for line in graph_ages:
@@ -68,9 +71,12 @@ for line in graph_ages:
         node, age = line.split(',')
         d_node_age[node] = age # node-ageclass dictionary
 
+# create binary lists to indicate children and adults
+ch = [1 if d_node_age[str(node)] == '3' else 0 for node in xrange(1, int(net_size) + 1)]
+ad = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, int(net_size) + 1)]
 
 ##############################################
-# data processing - convert tstep info to these dictionaries
+# data processing - convert tstep info into dictionaries
 for beta in blist:
 	# reference filenames in zipfolder
 	Itstep_file = 'Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
@@ -83,14 +89,13 @@ for beta in blist:
 		Rtstep = zf.open(Rtstep_file, 'r')
 		for line1, line2 in zip(Itstep, Rtstep):
 			print line1
-			d_Itstep[(beta, simnumber)] = [int(t) if int(t) else 0 for t in line1.split(', ')]
+			d_Itstep[(beta, simnumber)] = [0 if t == 'nan' else int(t) for t in line1.split(', ')]
 			d_Rtstep[(beta, simnumber)] = [0 if t == 'nan' else int(t) for t in line2.split(', ')]
 			simnumber += 1
 
 print d_Itstep.values()
 
-# ch = [1 if d_node_age[str(node)] == '3' else 0 for node in xrange(1, int(net_size) + 1)]
-# ad = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, int(net_size) + 1)]
+
 #
 # d_incid, d_OR, d_simresults = recreate_simdata(extractfile, zipname, size_epi, 
 #
