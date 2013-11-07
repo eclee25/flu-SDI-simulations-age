@@ -52,7 +52,7 @@ d_simOR_tot = {} # d_simOR_tot[(beta, simnumber)] = OR for entire simulation for
 d_epiOR_tot = defaultdict(list) # d_epiOR_tot[beta] = list of ORs for all simulations that were epidemics
 
 ### parameters ###
-numsims = 100  # number of simulations
+numsims = 50  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery

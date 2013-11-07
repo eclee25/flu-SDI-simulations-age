@@ -40,45 +40,53 @@ colorvec = ['black', 'red', 'orange', 'gold', 'green', 'blue', 'cyan', 'darkviol
 align_prop = 0.05
 
 ### pickled data parameters ###
-numsims = 1000 # number of simulations
+numsims = 50 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
-b1, b2 = (-0.0 * gamma)/(0 - 1), (-0.2 * gamma)/(0.2 - 1) # 0, .05
-blist = np.linspace(b1, b2, num=11, endpoint=True) # probability of transmission
+# T1, T2 = 0.0, 0.2
+# T1, T2 = 0.075, 0.075
+T1, T2 = 0.0643, 0.0643
+b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
+blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
-### import pickled data ###
-pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-d_epiOR = pickle.load(open(pname1, "rb"))
-d_epiincid = pickle.load(open(pname2, "rb"))
-d_epipreval = pickle.load(open(pname3, "rb"))
-beta_epi = pickle.load(open(pname4, "rb"))
-d_epiOR_filt = pickle.load(open(pname5, "rb"))
-d_epiOR_tot = pickle.load(open(pname6, "rb"))
+# data structures
+# d_node_age[str(node)] = age class
+d_node_age = {}
 
 ### ziparchive to read and write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-beta%.3f_vax0.zip' %(numsims, b1, b2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-%.3f_vax0.zip' %(numsims, b1, b2)
 
-### process node ages ###
-file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
-d_node_age={} # d_node_age[nodenumber] = ageclass
+#############################################
+# age data processing
+graph_ages = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
 
-for line in file2:
+for line in graph_ages:
     new_line = line.split()
     for line in new_line:
         node, age = line.split(',')
         d_node_age[node] = age # node-ageclass dictionary
-# create child and adult indicator vectors where index = nodenumber - 1
-c_nodes = [1 if d_node_age[str(node)] == '3' else 0 for node in xrange(1, 10305)]
-a_nodes = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, 10305)]
 
+# define network size
+N = len(d_node_age)
+
+# create binary lists to indicate children and adults
+ch = [1 if d_node_age[str(node)] == '3' else 0 for node in xrange(1, int(N) + 1)]
+ad = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, int(N) + 1)]
+
+##############################################
+# data processing - convert tstep info into dictionaries
+for beta in blist:
+	# reference filenames in zipfolder
+	Itstep_file = 'Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	Rtstep_file = 'Results/Rtstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
+	# recreate epidata from zip archive
+	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata(Itstep_file, Rtstep_file, zipname, beta, size_epi, ch, ad)
+
+# grab unique list of betas that produced at least one epidemic
+beta_epi = list(set([key[0] for key in d_epiincid]))
 
 ##############################################
 ### plot filtered and aligned OR by time for each beta value ###
@@ -101,12 +109,12 @@ for beta in beta_epi:
 	plt.xlabel('epidemic time step, beta: ' + str(beta) + ', 10-90% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 5])
-	plt.xlim([-1, 125])
-	figname = 'Figures/epiORalign_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
-	pp.compress_to_ziparchive(zipname, figname)
-# 	plt.show()
+	plt.xlim([-1, 200])
+# 	figname = 'Figures/epiORalign_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+# 	plt.savefig(figname)
+# 	plt.close()
+# 	pp.compress_to_ziparchive(zipname, figname)
+	plt.show()
 
 ##############################################
 ### plot filtered and aligned OR by time for each beta value ###
@@ -122,10 +130,8 @@ for beta in beta_epi:
 	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, beta, align_prop)
 		
 	# PROCESS YAX_AR: 
-	# recreate child and adult incid from results txt files
-	extractfile = 'Results/Itstep_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
-	# d_incid[(simnumber, ageclass)] = [num_inf_ageclass at t0,
-	d_incid = perc.recreate_incid(extractfile, zipname, size_epi, c_nodes, a_nodes)
+	# call upon d_epiAR dictionary
+	# dict_epiAR[(beta, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per 100 individuals
 
 	# plot data
 	# create two y-axes
@@ -139,25 +145,25 @@ for beta in beta_epi:
 		OR, = yax_OR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
 		
 		## AR y-axis
-		child, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_incid[(k1, 'C')][t5:])), d_incid[(k1, 'C')][t5:], marker = 'None', color = 'red')
-		adult, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_incid[(k1, 'A')][t5:])), d_incid[(k1, 'A')][t5:], marker = 'None', color = 'blue')
+		child, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiAR[(k0, k1, 'C')][t5:])), d_epiAR[(k0, k1, 'C')][t5:], marker = 'None', color = 'red')
+		adult, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiAR[(k0, k1, 'A')][t5:])), d_epiAR[(k0, k1, 'A')][t5:], marker = 'None', color = 'blue')
 
 	# plot settings
 	lines = [OR, child, adult]
 	yax_OR.legend(lines, ['Odds Ratio', 'Child Incidence', 'Adult Incidence'], loc = 'upper right')
 	yax_OR.set_ylabel('OR, child:adult')
 	yax_OR.set_ylim([0, 5])
-	yax_OR.set_xlim([-1, 125])
+	yax_OR.set_xlim([-1, 200])
 	yax_OR.set_xlabel('epidemic time step, beta: ' + str(beta) + ', 10-90% cum infections')
 	yax_AR.set_ylabel('Incidence per 100')
-	yax_AR.set_ylim([0, 20])
+	yax_AR.set_ylim([0, 5])
 	
 	# save plot
-	figname = 'Figures/epiORincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
-	plt.savefig(figname)
-	plt.close()
-	pp.compress_to_ziparchive(zipname, figname)
-# 	plt.show()
+# 	figname = 'Figures/epiORincid_beta_time_%ssims_beta%.3f_vax0.png' %(numsims, beta)
+# 	plt.savefig(figname)
+# 	plt.close()
+# 	pp.compress_to_ziparchive(zipname, figname)
+	plt.show()
 
 
 
