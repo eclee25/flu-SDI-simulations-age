@@ -36,33 +36,20 @@ import pickle
 import percolations as perc
 
 ### data structures ###
-d_node_age={} # d_node_age[nodenumber] = ageclass
-d_simresults = {} # d_simresults[(beta, simnumber)] = number infected
-d_episize = defaultdict(list) # epidemic sizes of epidemics only
-d_simOR = defaultdict(list) # OR for each time step for all sims
-d_epiOR = defaultdict(list) # OR for each time step for epidemics only
-d_filt_tsteps = defaultdict(list) # start and end time steps for each simulation by which we exclude OR data on chart due to small infected numbers
-d_simOR_filt = defaultdict(list) # OR for each time step for all sims where OR is nan when we want to exclude the time point due to small infected numbers
-d_epiOR_filt = defaultdict(list) # OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers
-d_simincid = defaultdict(list) # incidence for each time step for all sims
-d_epiincid = defaultdict(list) # incidence for each time step for epidemics only
-d_simpreval = defaultdict(list) # prevalence for each time step for all sims
-d_epipreval = defaultdict(list) # prevalence for each time step for epidemics only
-d_simOR_tot = {} # d_simOR_tot[(beta, simnumber)] = OR for entire simulation for all results
-d_epiOR_tot = defaultdict(list) # d_epiOR_tot[beta] = list of ORs for all simulations that were epidemics
+d_node_age = {} # d_node_age[nodenumber] = ageclass
 
 ### parameters ###
-numsims = 50  # number of simulations
+numsims = 1000  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
-# T1, T2 = 0.0, 0.2
+T1, T2 = 0.0, 0.2
 # T1, T2 = 0.075, 0.075 # compare to age_time_suscep_viz
-T1, T2 = 0.0643, 0.0643
+# T1, T2 = 0.0643, 0.0643
 b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
-blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
+blist = np.linspace(b1, b2, num=11, endpoint=True) # probability of transmission
 
 ### import data ###
 graph = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
@@ -99,6 +86,8 @@ for beta in blist:
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
+	# timer for all sims of one beta level
+	start_all = clock()
 	for num in xrange(numsims):
 		start = clock()
 		# 11/5/13 reduced outputs of simulation
@@ -106,6 +95,7 @@ for beta in blist:
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
 		print "simtime, simnum, episize:", clock()-start, "\t", num, "\t", total_rec
+	print "simtime for %s sims for beta %.3f" %(numsims, beta), clock() - start_all 
 
 	# print tsteps of infection and recovery to be able to recreate sim
 	# sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
@@ -118,15 +108,7 @@ for beta in blist:
 	pp.compress_to_ziparchive(zipname, filename)
 
 
-#
-#
-# ##############################################
-# ### write dictionaries to files ###
-# # print epi OR values to file, one file per beta
-# for beta in beta_epi:
-# 	filename = 'Results/epiOR_beta_time_%ssims_beta%.3f_vax0.txt' %(numsims, beta)
-# 	pp.print_OR_time_to_file(d_epiOR, filename, beta)
-# 	pp.compress_to_ziparchive(zipname, filename)
+
 #
 #
 # ##############################################
