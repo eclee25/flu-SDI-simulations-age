@@ -31,51 +31,40 @@ from time import clock
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import pretty_print as pp
-import pickle 
+import zipfile
 
 ## local modules ##
 import percolations as perc
 
 ### data structures ###
-d_node_age={} # d_node_age[nodenumber] = ageclass
-d_simresults = {} # d_simresults[(beta, simnumber)] = number infected
-d_episize = defaultdict(list) # epidemic sizes of epidemics only
-d_simOR = defaultdict(list) # OR for each time step for all sims
-d_epiOR = defaultdict(list) # OR for each time step for epidemics only
-d_filt_tsteps = defaultdict(list) # start and end time steps for each simulation by which we exclude OR data on chart due to small infected numbers
-d_simOR_filt = defaultdict(list) # OR for each time step for all sims where OR is nan when we want to exclude the time point due to small infected numbers
-d_epiOR_filt = defaultdict(list) # OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers
-d_simincid = defaultdict(list) # incidence for each time step for all sims
-d_epiincid = defaultdict(list) # incidence for each time step for epidemics only
-d_simpreval = defaultdict(list) # prevalence for each time step for all sims
-d_epipreval = defaultdict(list) # prevalence for each time step for epidemics only
-d_simOR_tot = {} # d_simOR_tot[(beta, simnumber)] = OR for entire simulation for all results
-d_epiOR_tot = defaultdict(list) # d_epiOR_tot[beta] = list of ORs for all simulations that were epidemics
+d_node_age = {} # d_node_age[nodenumber] = ageclass
 
 ### parameters ###
 numsims = 800  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
-gamma = 1/float(3) # 3 days recovery here
-T = 0.0643 # total epidemic size = 30%
+gamma = 1/float(5) # 5 days recovery here
+T = 0.0643 # total epidemic size = 20%
 # T = 0.075 # with larger T, adult susceptibility of 0.6 will still be greater than T_critical
 # T = beta / (beta + gamma)
 b = (-T * gamma)/(T - 1) # when T = 0.0643, b = 0.0137
-# define different adult susceptibilities
-s1, s2 = 0, 1
-susc_list = np.linspace(s1, s2, num=11, endpoint=True)
+
+# define different child susceptibilities
+# Cauchemez 2004 cites child susceptibility to be 1.15 times greater than that of adults
+s1, s2 = 1, 1.5
+susc_list = np.linspace(s1, s2, num=6, endpoint=True)
 
 ### import data ###
-f = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
-file2 = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
+graph = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
+graph_ages = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_ages_Sarah.csv') # node number and age class
 
 ### construct age-structured network ###
 G=nx.Graph()
-for edge in f:
+for edge in graph:
     G.add_edge(*edge.strip().split(','))
 
-for line in file2:
+for line in graph_ages:
     new_line = line.split()
     for line in new_line:
         node, age = line.split(',')
@@ -92,36 +81,37 @@ zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results
 
 ###############################################
 ### susceptibility simulations ###
+totaltime = clock()
+
 for s in susc_list:
-	print "adult susceptibility for current sims:", s
+	print "child susceptibility for current sims:", s
 	
 	# create dict for susceptibilities
 	# d_age_susc[str(age class code)] = susceptibility value
 	d_age_susc = {}
-	age_susc_list = [1, 1, 1, s, 1, 1]
-	for c, susc in zip(range(1, 7), age_susc_list):
-		d_age_susc[str(c)] = susc
+	# children are the third age class in d_node_age
+	age_susc_list = [1, 1, s, 1, 1, 1] 
+	for ageclass, susc in zip(range(1, 7), age_susc_list):
+		d_age_susc[str(ageclass)] = susc
+	print d_age_susc.items()
 	
 	## save infection and recovery tsteps for each sim
-	# d_save_I_tstep[simnumber] (or d_save_R_tstep) = [time step of infection/recovery where index = node number - 1 else float('nan')]
+	# d_save_I_tstep[simnumber] (or d_save_R_tstep) = [time step of infection/recovery where index = node number - 1 else 0]
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
+	# timer for all sims of one adult susceptibility
+	start_all = clock()
 	for num in xrange(numsims):
 		start = clock()
-		child_rec, adult_rec, total_rec, OR_list, tot_incid_list, tot_preval_list, filt_OR_list, OR_tot, I_tstep_list, R_tstep_list = perc.episim_age_time_susc(G, d_node_age, T, gamma, d_age_susc)
+		total_rec, I_tstep_list, R_tstep_list = perc.episim_age_time_susc(G, d_node_age, b, gamma, d_age_susc)
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
-		d_simresults[(s, num)] = (child_rec, adult_rec, total_rec)
-		d_simOR[(s, num)] = OR_list
-		d_simincid[(s, num)] = tot_incid_list
-		d_simpreval[(s, num)] = tot_preval_list
-		d_simOR_filt[(s, num)] = filt_OR_list
-		d_simOR_tot[(s, num)] = OR_tot
-		print "simtime, simnum:", clock()-start, "\t", num
+		print "simtime, simnum, episize:", clock()-start, "\t", num, "\t", total_rec
+	print "simtime for %s sims for child suscep %1.1f" %(numsims, s), clock() - start_all
 
-	# print tsteps of infection and recovery to be able to recreate sim
-	# sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
+# print tsteps of infection and recovery to be able to recreate sim
+# sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
 	filename = 'Results/Itstep_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
@@ -130,47 +120,11 @@ for s in susc_list:
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 
-##############################################
-### subset: epidemics only ###
-# # subset epidemics from all results
-# key = (susceptibility, simnumber), value = (child_rec, adult_rec, total_rec)
-d_simepi = perc.epidemicsonly(d_simresults, size_epi)
+print "total time for sims:", clock() - totaltime
 
-# subset OR/incidence/prevalence values that produced epidemics
-# key = (susceptibility, simnumber), value = [ORs/new cases/total cases/filtered ORs at different timesteps]
-for key in d_simepi:
-	d_epiOR[key] = d_simOR[key]
-	d_epiincid[key] = d_simincid[key]
-	d_epipreval[key] = d_simpreval[key]
-	d_epiOR_filt[key] = d_simOR_filt[key]
-	d_epiOR_tot[key[0]].append(d_simOR_tot[key])
-
-# grab unique list of susceptibility values that produced at least one epidemic
-susc_epi = list(set([key[0] for key in d_simepi]))
-
-##############################################
-### write dictionaries to files ###
-# print epi OR values to file, one file per beta
-for s in susc_epi:
-	filename = 'Results/epiOR_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
-	pp.print_OR_time_to_file(d_epiOR, filename, s)
-	pp.compress_to_ziparchive(zipname, filename)
-
-
-##############################################
-### pickle
-pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.txt' %(numsims, b, s1, s2)
-pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.txt' %(numsims, b, s1, s2)
-pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.txt' %(numsims, b, s1, s2)
-pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/suscepi_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.txt' %(numsims, b, s1, s2)
-pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.txt' %(numsims, b, s1, s2)
-pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.txt' %(numsims, b, s1, s2)
-pickle.dump(d_epiOR, open(pname1, "wb"))
-pickle.dump(d_epiincid, open(pname2, "wb"))
-pickle.dump(d_epipreval, open(pname3, "wb"))
-pickle.dump(susc_epi, open(pname4, "wb"))
-pickle.dump(d_epiOR_filt, open(pname5, "wb"))
-pickle.dump(d_epiOR_tot, open(pname6, "wb"))
+# reference table: probability of infection before adjusting for susceptibility
+for inf in range(52):
+	print inf, 1- np.exp(-b * inf)
 
 
 

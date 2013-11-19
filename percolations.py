@@ -170,7 +170,7 @@ def perc_age_gen(G, dict_node_age, T):
 ####################################################
 # time-based age-structured simulation function 
 def episim_age_time(G, dict_node_age, beta, gamma):
-	''' Time-based age-structured simulation function that returns the number of children, adults, total infected individuals, child to adult attack rate odds ratio at each time step, list of total incidence at each time step, list of total prevalence at each timestep, odds ratio at each time step with a substantial number of infections, OR for entire simulation, infection time step per node, and recovery time step per node during the simulation. 
+	''' Time-based simulation function for age-structured networks that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. A graph, node-age class dictionary, and beta and gamma values must be provided.
 	'''
 	
 	# set initial conditions
@@ -188,8 +188,9 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	N = int(G.order())
 	
 	# record infection timestep for patient zero
+	# node 1 will be in column index 0 (nodes number from 1 to 10304)
 	I_tstep_savelist = [0] * N
-	I_tstep_savelist[int(p_zero)-1] = tstep # node 1 will be in column index 0 (nodes number from 1 to 10304)
+	I_tstep_savelist[int(p_zero)-1] = tstep 
 	
 	# create list to record recovery timesteps
 	R_tstep_savelist = [0] * N
@@ -197,9 +198,6 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 ### simulation ###
 	while infected_tstep:
 		tstep += 1
-				
-		# count to keep track of incidence
-		incid_ct = 0
 				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's']
@@ -221,6 +219,65 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 		for new_r in new_recovered:
 			states[new_r] = 'r'
 	
+	# report total epidemic size
+	recovered = [node for node in states if states[node] == 'r']
+
+	### return data structures ###
+	return len(recovered), I_tstep_savelist, R_tstep_savelist
+
+####################################################
+# time-based age-structured simulation function with varying susceptibilities by age group
+def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility):
+	''' Time-based age-structured simulation function that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. Different susceptibility values may be set for each age group.
+	'''
+	
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()])
+	# Randomly choose one node as patient zero
+	p_zero = rnd.choice(G.nodes()) 
+	states[p_zero] = 'i'
+	
+	# keep track of infections over time
+	# time steps begin at 0
+	tstep = 0
+	infected_tstep = [p_zero]
+	
+	# number of nodes in graph
+	N = int(G.order())
+	
+	# record infection timestep for patient zero
+	# node 1 will be in column index 0 (nodes number from 1 to 10304)
+	I_tstep_savelist = [0] * N
+	I_tstep_savelist[int(p_zero)-1] = tstep 
+	
+	# create list to record recovery timesteps
+	R_tstep_savelist = [0] * N
+
+### simulation ###
+	while infected_tstep:
+		tstep += 1
+				
+		# S to I
+		suscep_tstep = [u for u in states if states[u] == 's']
+		new_infected = [u for u in suscep_tstep if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * infected_neighbors(G, u, states)))]
+		
+		for inf in new_infected:
+			I_tstep_savelist[int(inf)-1] = tstep
+
+		# I to R
+		new_recovered = [v for v in infected_tstep if rnd.random() < gamma]
+		for rec in new_recovered:
+			R_tstep_savelist[int(rec)-1] = tstep
+		
+		# update list of currently infected nodes for next tstep
+		infected_tstep = infected_tstep + new_infected
+		infected_tstep = [inf for inf in infected_tstep if inf not in new_recovered]
+		# update states dictionary
+		for new_i in new_infected:
+			states[new_i] = 'i'
+		for new_r in new_recovered:
+			states[new_r] = 'r'
+			
 	# report total epidemic size
 	recovered = [node for node in states if states[node] == 'r']
 
@@ -318,99 +375,7 @@ def recreate_epidata(I_filename, R_filename, zipname, beta, epi_size, child_node
 
 	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
-# ####################################################
-# # time-based age-structured simulation function with varying susceptibilities by age group
-# def episim_age_time_susc(G, dict_node_age, T, gamma, dict_age_susceptibility):
-# 	''' Time-based age-structured simulation function that returns the number of children, adults, total infected individuals, child to adult attack rate odds ratio at each time step, list of total incidence at each time step, list of total prevalence at each timestep, odds ratio at each time step with a substantial number of infections, OR for entire simulation, infection time step per node, and recovery time step per node during the simulation. Different susceptibility values may be set for each age group.
-# 	'''
-# 	
-# 	# set initial conditions
-# 	states = dict([(node, 's') for node in G.nodes()])
-# 	# Randomly choose one node as patient zero
-# 	p_zero = rnd.choice(G.nodes()) 
-# 	states[p_zero] = 'i'
-# 	
-# 	# define cumulative percentiles that filter OR time points
-# 	incl_min, incl_max = 0.1, 0.9
-# 	
-# 	# keep track of infections over time
-# 	# time steps begin at 0
-# 	tstep = 0
-# 	infected_tstep = [p_zero]
-# 	
-# 	# record infection timestep for patient zero
-# 	I_tstep_savelist = [float('nan') for n in G.nodes()]
-# 	I_tstep_savelist[int(p_zero)-1] = tstep # node 1 will be in column index 0 (nodes number from 1 to 10304)
-# 	
-# 	# create list to record recovery timesteps
-# 	R_tstep_savelist = [float('nan') for n in G.nodes()]
-#
-# 	# tot_incidlist is a list of total incidence for each time step
-# 	tot_incidlist = [len(infected_tstep)]
-# 	# tot_prevallist is a list of total prevalence for each time step
-# 	tot_prevallist = [len(infected_tstep)]
-# 	# ORlist is a list of ORs for each time step
-# 	ORlist = []
-#
-# ### simulation ###
-# 	while infected_tstep:
-# 		tstep += 1
-# 				
-# 		# count to keep track of incidence
-# 		incid_ct = 0
-# 				
-# 		# S to I
-# 		suscep_tstep = [u for u in states if states[u] == 's']
-# 		for u in suscep_tstep:
-# 			beta = calculate_beta(T, gamma, u, dict_node_age, dict_age_susceptibility)
-# 			
-# 			# states[u] == 's' condition is extraneous
-# 			if states[u] == 's' and rnd.random() < (1- np.exp(-beta*infected_neighbors(G, u, states))): 
-# 				states[u] = 'i'
-# 				incid_ct += 1
-# 				# save infection time step: one col per node, one sim per row
-# 				I_tstep_savelist[int(u)-1] = tstep
-#
-# 		# I to R
-# 		for v in infected_tstep:
-# 			# states[v] == 'i' condition is extraneous
-# 			if states[v] == 'i' and rnd.random() < gamma:
-# 				states[v] = 'r'
-# 				# save recovery time step: one col per node, one sim per row
-# 				R_tstep_savelist[int(v)-1] = tstep
-# 		
-# 		# update list of currently infected nodes for next tstep
-# 		infected_tstep = [node for node in states if states[node] == 'i']
-# 		
-# ### metrics by time step ###
-# 		# 1) track total incidence for each time step
-# 		tot_incidlist.append(incid_ct)
-# 		
-# 		# 2) track total prevalence for each time step
-# 		tot_prevallist.append(len(infected_tstep))
-# 			
-# 		# 3) return a list of ORs for each time step
-# 		OR = calc_OR_from_list(dict_node_age, infected_tstep)
-# 		ORlist.append(OR)
-#
-# ### metrics over entire simulation ###
-# 	# 1) For list of nodes that were infected over the entire simulation, look at indexes in I_tstep_savelist or R_tstep_savelist that are not float('nan')s. Remember that index = node number - 1
-# 	recovered = [node for node in states if states[node] == 'r']
-# 	# 2) infected children
-# 	rec_child_n = float(len([node for node in recovered if dict_node_age[node] == '3']))
-# 	# 3) infected adults
-# 	rec_adult_n = float(len([node for node in recovered if dict_node_age[node] == '4']))
-#
-# 	# 4) OR dict filtered to include only time points with a substantial number of infections
-# 	min_tstep, max_tstep = filter_time_points(tot_incidlist, recovered, incl_min, incl_max)
-# 	filtered_ORlist = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(ORlist)]
-#
-# 	# 5) total OR value
-# 	ORval_total = calc_OR_from_list(dict_node_age, recovered)
-#
-#
-# 	### return data structures ###
-# 	return rec_child_n, rec_adult_n, len(recovered), ORlist, tot_incidlist, tot_prevallist, filtered_ORlist, ORval_total, I_tstep_savelist, R_tstep_savelist
+
 
 ####################################################
 def infected_neighbors(G, node, states):
