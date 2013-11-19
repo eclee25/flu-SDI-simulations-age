@@ -113,6 +113,9 @@ for beta in beta_epi:
 	# PROCESS X-AXIS: identify tstep at which sim reaches 5% of cum infections for the epidemic
 	# d_dummyalign_tstep[beta] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
 	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, beta, align_prop)
+	
+	# TEST (11/19/13): realign plots for epitime to start at t = 0 by reassigning avg_align_tstep
+	avg_align_tstep = 0
 
 	# plot aligned data
 	# zip beta, episim number, and tstep for 5% cum-inf for sims where (beta, episim number) is the key for d_epiOR_filt
@@ -148,6 +151,9 @@ for beta in beta_epi:
 	# PROCESS X-AXIS: identify tstep at which sim reaches 5% of cum infections for the epidemic
 	# d_dummyalign_tstep[beta] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
 	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, beta, align_prop)
+
+	# TEST (11/19/13): realign plots for epitime to start at t = 0 by reassigning avg_align_tstep
+	avg_align_tstep = 0
 		
 	# PROCESS YAX_AR: 
 	# call upon d_epiAR dictionary
@@ -158,7 +164,7 @@ for beta in beta_epi:
 	fig, yax_OR = plt.subplots()
 	yax_AR = yax_OR.twinx()
 	
-	# zip beta, episim number, and tstep for 10% cum-inf for sims where (beta, episim number) is the key for d_epiOR_filt
+	# zip beta, episim number, and tstep for 5% cum-inf for sims where (beta, episim number) is the key for d_epiOR_filt
 	for k0, k1, t5 in zip((k[0] for k in dummyk), (k[1] for k in dummyk), d_dummyalign_tstep[beta]):
 	
 		## OR y-axis

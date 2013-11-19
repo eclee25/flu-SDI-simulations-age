@@ -25,13 +25,14 @@
 ### packages/modules ###
 import matplotlib.pyplot as plt
 import numpy as np
-import pretty_print as pp
 from collections import defaultdict
 import zipfile
-import percolations as perc
 import math
 from time import clock
 
+## local modules ##
+import percolations as perc
+import pretty_print as pp
 
 ### plotting settings ###
 colorvec = ['black', 'red', 'orange', 'gold', 'green', 'blue', 'cyan', 'darkviolet', 'hotpink']
@@ -49,7 +50,7 @@ T1, T2 = 0.075, 0.075
 b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
 blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
-# data structures
+### data structures ###
 # d_node_age[str(node)] = age class
 d_node_age = {}
 
@@ -75,17 +76,14 @@ ad = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, int(N) + 1)
 
 ##############################################
 # data processing - convert tstep info into dictionaries
+
+# declare dictionaries
+# dict_epiincid[(beta, simnumber, 'T', 'C' or 'A')] = [T, C or A incid at tstep 0, T, C or A incid at tstep 1...], where incidence is simply number of new cases (raw)
+# dict_epiAR[(beta, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per population size
+# dict_epiOR[(beta, simnumber)] = [OR at tstep0, OR at tstep1...]
+# dict_epiOR_filt[(beta, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
+# dict_epiresults[(beta, simnumber)] = (episize, c_episize, a_episize)
 d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list)
-# 	# dict_epiincid[(beta, simnumber, 'T', 'C' or 'A')] = [T, C or A incid at tstep 0, T, C or A incid at tstep 1...], where incidence is simply number of new cases (raw)
-# 	dict_epiincid = defaultdict(list)
-# 	# dict_epiAR[(beta, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per population size
-# 	dict_epiAR = defaultdict(list)
-# 	# dict_epiOR[(beta, simnumber)] = [OR at tstep0, OR at tstep1...]
-# 	dict_epiOR = defaultdict(list)
-# 	# dict_epiOR_filt[(beta, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
-# 	dict_epiOR_filt = defaultdict(list)
-# 	# dict_epiresults[(beta, simnumber)] = (episize, c_episize, a_episize)
-# 	dict_epiresults = {}
 
 for beta in blist:
 	processing = clock()
@@ -139,6 +137,7 @@ for beta in beta_epi:
 ##############################################
 ### plot filtered OR by time for all beta values ###
 # each sim is one line, each beta is a diff color on one plot
+# this chart doesn't apply if there is only one beta value
 for beta in beta_epi:
 	pl_ls = [key for key in d_epiOR_filt if key[0] == beta]
 	colvec = colorvec.pop()
