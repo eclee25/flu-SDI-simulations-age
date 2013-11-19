@@ -44,8 +44,8 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
 # T1, T2 = 0.0, 0.2
-# T1, T2 = 0.075, 0.075
-T1, T2 = 0.0643, 0.0643
+T1, T2 = 0.075, 0.075
+# T1, T2 = 0.0643, 0.0643
 b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
 blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
@@ -189,6 +189,7 @@ for beta in beta_epi:
 
 
 # ##############################################
+# ### this dict is no longer created in data processing
 # ### plot total OR by beta ###
 # # one chart for all betas (comparable to OR vs T)
 # plt.errorbar(beta_epi, [np.mean(d_epiOR_tot[b]) for b in beta_epi], yerr = [np.std(d_epiOR_tot[b]) for b in beta_epi], marker = 'o', color = 'black', linestyle = 'None')

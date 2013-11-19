@@ -30,7 +30,6 @@ from time import clock
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import pretty_print as pp
-import pickle 
 
 ## local modules ##
 import percolations as perc
@@ -45,11 +44,11 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # on avg, assume 5 days till recovery
 gamma = 0.2
 # assume T ranges from 0.0 to 0.2, gamma = 1/5 and T = beta / (beta + gamma)
-T1, T2 = 0.0, 0.2
-# T1, T2 = 0.075, 0.075 # compare to age_time_suscep_viz
+# T1, T2 = 0.0, 0.2
+T1, T2 = 0.075, 0.075 
 # T1, T2 = 0.0643, 0.0643
 b1, b2 = (-T1 * gamma)/(T1 - 1), (-T2 * gamma)/(T2 - 1) # 0, .05
-blist = np.linspace(b1, b2, num=11, endpoint=True) # probability of transmission
+blist = np.linspace(b1, b2, num=1, endpoint=True) # probability of transmission
 
 ### import data ###
 graph = open('/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Data/urban_edges_Sarah.csv') # Vancouver network
@@ -72,17 +71,18 @@ print "network size:", net_size
 # number of nodes of each age class
 c_size, a_size = perc.child_adult_size(d_node_age)
 
-
 ### ziparchive to write results ###
 zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/beta_time_%ssims_beta%.3f-%.3f_vax0.zip' %(numsims, b1, b2)
 
 ###############################################
 ### beta simulations ###
+totaltime = clock()
+
 for beta in blist:
 	print "beta value for current simulations:", beta
 	
 	## save infection and recovery tsteps for each sim
-	# d_save_I_tstep[simnumber] (or d_save_R_tstep) = [time step of infection/recovery where index = node number - 1 else float('nan')]
+	# d_save_I_tstep[simnumber] (or d_save_R_tstep) = [time step of infection/recovery where index = node number - 1 else 0]
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
@@ -107,23 +107,7 @@ for beta in blist:
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 
+print "total time for sims:", clock() - totaltime
 
-
-#
-#
-# ##############################################
-# ### pickle
-# pname1 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-# pname2 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiincid_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-# pname3 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epipreval_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-# pname4 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/betaepi_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-# pname5 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_filt_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-# pname6 = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Pickled/d_epiOR_tot_beta_time_%ssims_beta%.3f-%.3f_vax0' %(numsims, b1, b2)
-# pickle.dump(d_epiOR, open(pname1, "wb"))
-# pickle.dump(d_epiincid, open(pname2, "wb"))
-# pickle.dump(d_epipreval, open(pname3, "wb"))
-# pickle.dump(beta_epi, open(pname4, "wb"))
-# pickle.dump(d_epiOR_filt, open(pname5, "wb"))
-# pickle.dump(d_epiOR_tot, open(pname6, "wb"))
 
 
