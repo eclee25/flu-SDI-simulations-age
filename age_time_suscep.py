@@ -30,25 +30,29 @@ import numpy as np
 from time import clock
 from collections import defaultdict
 import matplotlib.pyplot as plt
-import pretty_print as pp
 import zipfile
 
 ## local modules ##
 import percolations as perc
+import pretty_print as pp
 
 ### data structures ###
-d_node_age = {} # d_node_age[nodenumber] = ageclass
+# d_node_age[nodenumber] = ageclass
+d_node_age = {} 
 
-### parameters ###
+### simulation parameters ###
 numsims = 800  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 1/float(5) # 5 days recovery here
-T = 0.0643 # total epidemic size = 20%
-# T = 0.075 # with larger T, adult susceptibility of 0.6 will still be greater than T_critical
+# T = 0.0643 # total epidemic size = 20%
+T = 0.075 
+
 # T = beta / (beta + gamma)
-b = (-T * gamma)/(T - 1) # when T = 0.0643, b = 0.0137
+# when T = 0.0643 and gamma = 1/5, b = 0.0137
+# when T = 0.075 and gamma = 1/5, b = 0.0162
+b = (-T * gamma)/(T - 1) 
 
 # define different child susceptibilities
 # Cauchemez 2004 cites child susceptibility to be 1.15 times greater than that of adults
@@ -125,6 +129,5 @@ print "total time for sims:", clock() - totaltime
 # reference table: probability of infection before adjusting for susceptibility
 for inf in range(52):
 	print inf, 1- np.exp(-b * inf)
-
 
 

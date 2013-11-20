@@ -286,9 +286,11 @@ def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility)
 
 
 ####################################################
-def recreate_epidata(I_filename, R_filename, zipname, beta, epi_size, child_nodes, adult_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
-	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns three dictionaries: incidence rate by group, OR, and total sim results.
+def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
+	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns five dictionaries for epidemic simulations: incidence rate by group, OR, total sim results, attack rate (number of infections/pop size), and OR filtered to time steps where 5-95% of cumulative incidence takes place. This function may be used for time sims with and without susceptibility designations.
 	"""
+	
+	dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 	
 	# filter time point parameters, 5% and 95% cumulative incidence
 	incl_min, incl_max = 0.05, 0.95
@@ -309,8 +311,8 @@ def recreate_epidata(I_filename, R_filename, zipname, beta, epi_size, child_node
 			recovered_tsteps = line2.split(', ')
 			# insert epidemics only into dicts
 			if sum([0 if not int(tstep) else 1 for tstep in infected_tsteps]) > epi_size:
-				dict_Itstep[(beta, simnumber)] = [int(t) for t in infected_tsteps]
-				dict_Rtstep[(beta, simnumber)] = [int(t) for t in recovered_tsteps]
+				dict_Itstep[(b_or_s, simnumber)] = [int(t) for t in infected_tsteps]
+				dict_Rtstep[(b_or_s, simnumber)] = [int(t) for t in recovered_tsteps]
 			simnumber += 1
 		
 	# total population size
@@ -318,21 +320,21 @@ def recreate_epidata(I_filename, R_filename, zipname, beta, epi_size, child_node
 	# size of child and adult populations
 	children, adults = float(sum(child_nodes)), float(sum(adult_nodes))
 
-	for b, simnum in dict_Itstep:
+	for b_or_s, simnum in dict_Itstep:
 		# initiate lists to store incidence in different age groups where list index is tstep
 		# skip counting patient zero in incidence and attack rate for convenience
 		tot_AR, c_AR, a_AR = [0],[0],[0]
 		tot_incid, c_incid, a_incid = [0], [0], [0]
 		# child infection tsteps only, all else nan
-		c_tsteps = [c*t for c, t in zip(child_nodes, dict_Itstep[(b, simnum)])]
+		c_tsteps = [c*t for c, t in zip(child_nodes, dict_Itstep[(b_or_s, simnum)])]
 		# adult infection tsteps only, all else nan
-		a_tsteps = [a*t for a, t in zip(adult_nodes, dict_Itstep[(b, simnum)])]
+		a_tsteps = [a*t for a, t in zip(adult_nodes, dict_Itstep[(b_or_s, simnum)])]
 		
 		# count number of new infections (0.15 sec)
 		# tstep 0 is skipped
-		for I_tstep in xrange(1, max(dict_Itstep[(b, simnum)]) + 1):
+		for I_tstep in xrange(1, max(dict_Itstep[(b_or_s, simnum)]) + 1):
 			# number of new infections per 100 in total popn at I_tstep
-			dummy_tot_inf = len([inf for inf in dict_Itstep[(b, simnum)] if inf == I_tstep])
+			dummy_tot_inf = len([inf for inf in dict_Itstep[(b_or_s, simnum)] if inf == I_tstep])
 			# number of new child infections per 100 in child popn at I_tstep
 			dummy_c_inf = len([inf for inf in c_tsteps if inf == I_tstep])
 			# number of new adult infections per 100 in adult pop at I_tstep
@@ -351,27 +353,27 @@ def recreate_epidata(I_filename, R_filename, zipname, beta, epi_size, child_node
 			a_incid.append(dummy_a_inf)
 		
 		# recover attack rates over time in dictionary for each sim
-		dict_epiAR[(beta, simnum, 'T')] = tot_AR
-		dict_epiAR[(beta, simnum, 'C')] = c_AR
-		dict_epiAR[(beta, simnum, 'A')] = a_AR
+		dict_epiAR[(b_or_s, simnum, 'T')] = tot_AR
+		dict_epiAR[(b_or_s, simnum, 'C')] = c_AR
+		dict_epiAR[(b_or_s, simnum, 'A')] = a_AR
 				
 		# recover new cases over time in dictionary for each sim as raw counts
-		dict_epiincid[(beta, simnum, 'T')] = tot_incid
-		dict_epiincid[(beta, simnum, 'C')] = c_incid
-		dict_epiincid[(beta, simnum, 'A')] = a_incid
+		dict_epiincid[(b_or_s, simnum, 'T')] = tot_incid
+		dict_epiincid[(b_or_s, simnum, 'C')] = c_incid
+		dict_epiincid[(b_or_s, simnum, 'A')] = a_incid
 		
 		# recover OR
 		# if attack rate in children or adults is 0 or 1, float(nan) is returned because the OR cannot be appropriately calculated
 		OR_list = [((c/(1-c))/(a/(1-a))) if c and c < 1 and a and a < 1 else float('nan') for c, a in zip(c_AR, a_AR)]
-		dict_epiOR[(beta, simnum)] = OR_list
+		dict_epiOR[(b_or_s, simnum)] = OR_list
 		
 		# recover general epi results
-		dict_epiresults[(beta, simnum)] = (sum(tot_incid), sum(c_incid), sum(a_incid))
+		dict_epiresults[(b_or_s, simnum)] = (sum(tot_incid), sum(c_incid), sum(a_incid))
 		
 		# filter time points where current outbreak size is too small (just beginning or towards the end of the epidemic)
 		min_tstep, max_tstep = filter_time_points2(tot_incid, incl_min, incl_max)
 		
-		dict_epiOR_filt[(beta, simnum)] = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
+		dict_epiOR_filt[(b_or_s, simnum)] = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
 
 	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
@@ -424,21 +426,21 @@ def filter_time_points2(tot_incidlist, incl_min, incl_max):
 
 
 ####################################################
-def define_epi_time(dict_epiincid, beta, align_proportion):
-	""" For time-based epidemic simulations, identify the tstep at which the simulation reaches align_proportion proportion of cumulative infections for the epidemic. The goal is to align the epidemic trajectories at the point where the tsteps are comparable for each simulation. Returns dict where key = beta and value = list of tstep at which simulations that reached epidemic sizes attained 5% cumulative infections. 
+def define_epi_time(dict_epiincid, b_or_s, align_proportion):
+	""" For time-based epidemic simulations, identify the tstep at which the simulation reaches align_proportion proportion of cumulative infections for the epidemic. The goal is to align the epidemic trajectories at the point where the tsteps are comparable for each simulation. Returns dict where key = beta or s and value = list of tstep at which simulations that reached epidemic sizes attained 5% cumulative infections. 
 	"""
 	
-	dummykeys = [k for k in dict_epiincid if k[0] == beta and k[2] == 'T']
-	# dict_dummyalign_tstep[beta] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
+	dummykeys = [k for k in dict_epiincid if k[0] == b_or_s and k[2] == 'T']
+	# dict_dummyalign_tstep[b_or_s] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
 	dict_dummyalign_tstep = defaultdict(list)
 	
 	for k in dummykeys:
 		cum_infections = np.cumsum(dict_epiincid[k])
 		prop_cum_infections = [float(item)/cum_infections[-1] for item in cum_infections]
-		dict_dummyalign_tstep[beta].append(bisect.bisect(prop_cum_infections, align_proportion))
+		dict_dummyalign_tstep[b_or_s].append(bisect.bisect(prop_cum_infections, align_proportion))
 	
 	# change this value if you want the plots to align at a different tstep
-	match_tstep = int(round(np.mean(dict_dummyalign_tstep[beta]))) 
+	match_tstep = int(round(np.mean(dict_dummyalign_tstep[b_or_s]))) 
 	
 	return dict_dummyalign_tstep, match_tstep, dummykeys
 
@@ -458,6 +460,7 @@ def calculate_beta(T, gamma, susc_node, dict_node_age, dict_age_susceptibility):
 	
 
 # ####################################################
+## don't think this function is needed anymore 11/20/13
 # def filter_time_points(tot_incidlist, recovered, incl_min, incl_max):
 # 	""" pairs with susc time sim only (11/6/13) In a time-based epidemic simulation, filter OR data points that may not be valid due to the small number of infected individuals at the beginning and end of an epidemic. For each simulation, define this period as the time period between which the percentage of infecteds is incl_min (float between 0 and 1) and incl_max (float between 0 and 1) percent of the cumulative epidemic size for that simulation. 
 # 	"""
