@@ -111,10 +111,10 @@ for s in susc_list:
 		total_rec, I_tstep_list, R_tstep_list = perc.episim_age_time_susc(G, d_node_age, b, gamma, d_age_susc)
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
-		print "simtime, simnum, episize:", clock()-start, "\t", num, "\t", total_rec
+		print "simtime, simnum, episize:", clock() - start, "\t", num, "\t", total_rec
 	print "simtime for %s sims for child suscep %1.1f" %(numsims, s), clock() - start_all
 
-# print tsteps of infection and recovery to be able to recreate sim
+# print tsteps of infection and recovery to recreate sim
 # sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
 	filename = 'Results/Itstep_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)

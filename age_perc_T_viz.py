@@ -29,9 +29,9 @@ import numpy as np
 import matplotlib.cm as cm
 
 ### pickled data parameters ###
-numsims = 50 # number of simulations
+numsims = 800 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network
-Tlist = np.linspace(0, .2, num=21, endpoint=True) # probability of transmission
+Tlist = np.linspace(0.0643, .075, num=2, endpoint=True) # probability of transmission
 # Tlist = np.linspace(0.04, 0.07, num = 16, endpoint=True) # zoom in on realistic values
 
 ### import pickled data ###
