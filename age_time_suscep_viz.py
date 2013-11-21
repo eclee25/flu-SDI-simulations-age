@@ -106,12 +106,12 @@ susc_epi = list(set([key[0] for key in d_epiincid]))
 
 ##############################################
 ### plot OR by time for each suscep value ###
-# each sim is one line
+# each epidemic sim is one line
 for s in susc_epi:
 	pl_ls = [key for key in d_epiOR if key[0] == s]
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
-	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('time step, adult suscep: ' + str(s))
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
@@ -129,7 +129,7 @@ for s in susc_epi:
 	pl_ls = [key for key in d_epiOR_filt if key[0] == s]
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
-	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('sim time step, adult suscep: ' + str(s) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
@@ -148,7 +148,7 @@ for s in susc_epi:
 	colvec = colorvec.pop()
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = colvec)
-	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
 	plt.xlabel('time step, all s values, 5-95% cum infections')
 	plt.ylabel('filtered OR, child:adult')
 	plt.ylim([0, 30])
