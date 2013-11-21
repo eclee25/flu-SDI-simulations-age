@@ -43,8 +43,8 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 1/float(5) # 5 days recovery here
-# T = 0.0643 # total epidemic size = 20%
-T = 0.075 
+T = 0.0643 # total epidemic size = 20%
+# T = 0.075 # total epidemic size = 30%
 
 # T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
@@ -112,7 +112,7 @@ for s in susc_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, adult suscep: ' + str(s))
+	plt.xlabel('time step, child suscep: ' + str(s))
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
@@ -130,7 +130,7 @@ for s in susc_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('sim time step, adult suscep: ' + str(s) + ', 5-95% cum infections')
+	plt.xlabel('sim time step, child suscep: ' + str(s) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
@@ -166,7 +166,7 @@ for s in susc_epi:
 	pl_ls = [key for key in d_epiincid if key[0] == s and key[2] == 'T']
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
-	plt.xlabel('time step, adult suscep: ' + str(s))
+	plt.xlabel('time step, child suscep: ' + str(s))
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 200])
 	figname = 'Figures/epiincid_susc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
@@ -182,7 +182,7 @@ for s in susc_epi:
 	d_episize[s] = [sum(d_epiincid[key]) for key in d_epiincid if key[0] == s and key[2] == 'T']
 plt.errorbar(susc_epi, [np.mean(d_episize[s]) for s in susc_epi], yerr = [np.std(d_episize[s]) for s in susc_epi], marker = 'o', color = 'black', linestyle = 'None')
 plt.xlim([0.9, 1.6])
-plt.xlabel('adult susceptibility')
+plt.xlabel('child susceptibility')
 plt.ylabel('epidemic size')
 figname = 'Figures/episize_susc_time_%ssims_beta%.3f_vax0.png' %(numsims, b)
 plt.savefig(figname)

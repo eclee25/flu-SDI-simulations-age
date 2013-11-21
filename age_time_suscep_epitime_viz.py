@@ -47,8 +47,8 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 1/float(5) # 5 days recovery here
-# T = 0.0643 # total epidemic size = 20%
-T = 0.075 
+T = 0.0643 # total epidemic size = 20%
+# T = 0.075 # total epidemic size = 30%
 
 # T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
@@ -129,7 +129,7 @@ for s in susc_epi:
 	
 		plt.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('epidemic time step, adult suscep: ' + str(s) + ', 5-95% cum infections')
+	plt.xlabel('epidemic time step, child suscep: ' + str(s) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 20])
 	plt.xlim([-1, 150])
@@ -137,6 +137,7 @@ for s in susc_epi:
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
+	print "ORonly plotting time", s, clock() - ORonly
 # 	plt.show()
 
 ##############################################
@@ -165,7 +166,7 @@ for s in susc_epi:
 	fig, yax_OR = plt.subplots()
 	yax_AR = yax_OR.twinx()
 	
-	# zip s, episim number, and tstep for 5% cum-inf for sims where (beta, episim number) is the key for d_epiOR_filt
+	# zip s, episim number, and tstep for 5% cum-inf for sims where (s, episim number) is the key for d_epiOR_filt
 	for k0, k1, t5 in zip((k[0] for k in dummyk), (k[1] for k in dummyk), d_dummyalign_tstep[s]):
 	
 		## OR y-axis
@@ -181,7 +182,7 @@ for s in susc_epi:
 	yax_OR.set_ylabel('OR, child:adult')
 	yax_OR.set_ylim([0, 20])
 	yax_OR.set_xlim([-1, 150])
-	yax_OR.set_xlabel('epidemic time step, adult suscep: ' + str(s) + ', 5-95% cum infections')
+	yax_OR.set_xlabel('epidemic time step, child suscep: ' + str(s) + ', 5-95% cum infections')
 	yax_AR.set_ylabel('Incidence per 100')
 	yax_AR.set_ylim([0, 4])
 	
@@ -190,6 +191,7 @@ for s in susc_epi:
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
+	print "ORincid plotting time", s, clock() - ORincid
 # 	plt.show()
 
 
