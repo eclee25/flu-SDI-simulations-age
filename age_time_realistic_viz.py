@@ -92,11 +92,11 @@ ad = [1 if d_node_age[str(node)] == '4' else 0 for node in xrange(1, int(N) + 1)
 # data processing - convert tstep info into dictionaries
 
 # declare dictionaries
-# dict_epiincid[(simnumber, 'T', 'C' or 'A')] = [T, C or A incid at tstep 0, T, C or A incid at tstep 1...], where incidence is simply number of new cases (raw)
-# dict_epiAR[(simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per population size
-# dict_epiOR[(simnumber)] = [OR at tstep0, OR at tstep1...]
-# dict_epiOR_filt[(simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
-# dict_epiresults[(simnumber)] = (episize, c_episize, a_episize)
+# dict_epiincid[(b_nc, simnumber, 'T', 'C' or 'A')] = [T, C or A incid at tstep 0, T, C or A incid at tstep 1...], where incidence is simply number of new cases (raw)
+# dict_epiAR[(b_nc, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per population size
+# dict_epiOR[(b_nc, simnumber)] = [OR at tstep0, OR at tstep1...]
+# dict_epiOR_filt[(b_nc, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
+# dict_epiresults[(b_nc, simnumber)] = (episize, c_episize, a_episize)
 d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list)
 
 processing = clock()
