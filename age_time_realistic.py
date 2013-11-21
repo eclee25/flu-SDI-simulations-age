@@ -4,7 +4,7 @@
 ###Python template
 ###Author: Elizabeth Lee
 ###Date: 11/20/13
-###Function: Time-based epidemic simulations with realistic parameters for children and non-children. Non-children are considered the base age class. Realistic parameters include: individual susceptibility (sigma), individual infectivity per contact (beta), individual recovery rate (gamma = 1/infectious period). Realistic parameters come from Cauchemez, et al. (2004). A Bayesian MCMC approach to study transmission of influenz: application to household longitudinal data. Statistics in Medicine 23: 3469-3487.
+###Function: Time-based epidemic simulations with realistic parameters for children and non-children. Non-children are considered the base age class. Realistic parameters include: individual susceptibility (sigma), individual infectivity per contact (beta), individual recovery rate (gamma = 1/infectious period). Realistic parameters come from Cauchemez, et al. (2004). A Bayesian MCMC approach to study transmission of influenza: application to household longitudinal data. Statistics in Medicine 23: 3469-3487.
 
 ###Import data: urban_edges_Sarah.csv, urban_ages_Sarah.csv
 
@@ -118,11 +118,11 @@ for num in xrange(numsims):
 
 # print infection and recovery tsteps to recreate sim
 # sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
-filename = 'Results/Itstep_realistic_time_%ssims_ncbeta%.3f_ncbase_Cauchemez04.zip' %(numsims, b_nc)
+filename = 'Results/Itstep_realistic_time_%ssims_ncbeta%.3f_ncbase_Cauchemez04.txt' %(numsims, b_nc)
 pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
 pp.compress_to_ziparchive(zipname, filename)
 
-filename = 'Results/Rtstep_realistic_time_%ssims_ncbeta%.3f_ncbase_Cauchemez04.zip' %(numsims, b_nc)
+filename = 'Results/Rtstep_realistic_time_%ssims_ncbeta%.3f_ncbase_Cauchemez04.txt' %(numsims, b_nc)
 pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 pp.compress_to_ziparchive(zipname, filename)
 
