@@ -5,7 +5,7 @@
 ###Author: Elizabeth Lee
 ###Date: 10/7/13
 ###Function:
-##### 1) decrease susceptibility of adults in steps from 1 to 0 in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
+##### 1) increase susceptibility of children in steps from 1 to 1.5 in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
 
 ###Import data: urban_edges_Sarah.csv, urban_ages_Sarah.csv
 
@@ -41,13 +41,14 @@ import pretty_print as pp
 d_node_age = {} 
 
 ### simulation parameters ###
-numsims = 800  # number of simulations
+numsims = 10  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 1/float(5) # 5 days recovery here
-# T = 0.0643 # total epidemic size = 20%
-T = 0.075 
+# T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
+# T = 0.075 # total epidemic size (naive, no age-dep params) = 30%
+T = 0.0620 # T_avg = 0.0643 @ sigma_c = 1.15
 
 # T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
@@ -74,7 +75,7 @@ for line in graph_ages:
         node, age = line.split(',')
         d_node_age[node] = age # node-ageclass dictionary
 
-net_size = float(G.order())
+N = float(G.order())
 print "network size:", net_size
 
 # number of nodes of each age class
@@ -104,7 +105,7 @@ for s in susc_list:
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
-	# timer for all sims of one adult susceptibility
+	# timer for all sims of one child susceptibility
 	start_all = clock()
 	for num in xrange(numsims):
 		start = clock()
@@ -130,4 +131,5 @@ print "total time for sims:", clock() - totaltime
 for inf in range(52):
 	print inf, 1- np.exp(-b * inf)
 
-
+T_avg = (T * 1.15 * c_size + T * (N - c_size))/N
+print "T_avg:", T_avg
