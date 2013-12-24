@@ -284,6 +284,64 @@ def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility)
 	return len(recovered), I_tstep_savelist, R_tstep_savelist
 
 ####################################################
+# time-based age-structured simulation function with varying infectious periods by age group
+def episim_age_time_rec(G, dict_node_age, dict_age_recovery):
+	''' Time-based age-structured simulation function that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. Different recovery rates (1/infectious period) may be set for each age group in the main code and imported as pre-calculated betas in dict_age_recovery.
+	'''
+	
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()])
+	# Randomly choose one node as patient zero
+	p_zero = rnd.choice(G.nodes()) 
+	states[p_zero] = 'i'
+	
+	# keep track of infections over time
+	# time steps begin at 0
+	tstep = 0
+	infected_tstep = [p_zero]
+	
+	# number of nodes in graph
+	N = int(G.order())
+	
+	# record infection timestep for patient zero
+	# node 1 will be in column index 0 (nodes number from 1 to 10304)
+	I_tstep_savelist = [0] * N
+	I_tstep_savelist[int(p_zero)-1] = tstep 
+	
+	# create list to record recovery timesteps
+	R_tstep_savelist = [0] * N
+
+### simulation ###
+	while infected_tstep:
+		tstep += 1
+				
+		# S to I
+		suscep_tstep = [u for u in states if states[u] == 's']
+		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-dict_age_recovery[dict_node_age[u]][0] * infected_neighbors(G, u, states)))]
+		for inf in new_infected:
+			I_tstep_savelist[int(inf)-1] = tstep
+
+		# I to R
+		new_recovered = [v for v in infected_tstep if rnd.random() < dict_age_recovery[dict_node_age[v]][1]]
+		for rec in new_recovered:
+			R_tstep_savelist[int(rec)-1] = tstep
+		
+		# update list of currently infected nodes for next tstep
+		infected_tstep = infected_tstep + new_infected
+		infected_tstep = [inf for inf in infected_tstep if inf not in new_recovered]
+		# update states dictionary
+		for new_i in new_infected:
+			states[new_i] = 'i'
+		for new_r in new_recovered:
+			states[new_r] = 'r'
+			
+	# report total epidemic size
+	recovered = [node for node in states if states[node] == 'r']
+
+	### return data structures ###
+	return len(recovered), I_tstep_savelist, R_tstep_savelist
+
+####################################################
 def episim_age_time_realistic(G, dict_node_age, dict_age_params):
 	''' Realistic time-based age-structured simulation function.
 	'''
