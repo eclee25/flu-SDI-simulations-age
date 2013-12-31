@@ -422,8 +422,6 @@ def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_no
 	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns five dictionaries for epidemic simulations: incidence rate by group, OR, total sim results, attack rate (number of infections/pop size), and OR filtered to time steps where 5-95% of cumulative incidence takes place. This function may be used for time sims with and without susceptibility designations.
 	"""
 	
-	dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
-	
 	# filter time point parameters, 5% and 95% cumulative incidence
 	incl_min, incl_max = 0.05, 0.95
 	
