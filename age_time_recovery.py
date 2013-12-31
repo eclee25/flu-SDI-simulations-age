@@ -3,7 +3,7 @@
 ##############################################
 ###Python template
 ###Author: Elizabeth Lee
-###Date: 10/7/13
+###Date: 12/23/13
 ###Function:
 ##### 1) Change child infectious periods in steps relative to infectious periods of other age groups (while infectious period in all other age groups remains at 5 days) in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
 
@@ -43,7 +43,7 @@ import pretty_print as pp
 d_node_age = {} 
 
 ### simulation parameters ###
-numsims = 0  # number of simulations
+numsims = 10  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -81,7 +81,7 @@ for line in graph_ages:
         d_node_age[node] = age # node-ageclass dictionary
 
 N = float(G.order())
-print "network size:", net_size
+print "network size:", N
 
 # number of nodes of each age class
 c_size, a_size = perc.child_adult_size(d_node_age)
