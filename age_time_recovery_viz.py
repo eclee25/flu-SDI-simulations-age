@@ -163,7 +163,7 @@ pp.compress_to_ziparchive(zipname, figname)
 for r in recov_epi:
 	pl_ls = [key for key in d_epiincid if key[0] == r and key[2] == 'T']
 	for key in pl_ls:
-		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
+		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')	
 	plt.xlabel('time step, child recov: ' + str(r))
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 200])

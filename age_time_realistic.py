@@ -46,7 +46,7 @@ d_save_I_tstep = defaultdict(list)
 d_save_R_tstep = defaultdict(list)
 
 ### simulation parameters ###
-numsims = 1000  # number of simulations
+numsims = 10  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 
 ## realistic disease parameters (Cauchemez 2004)
@@ -62,8 +62,9 @@ infectivity_cnc = infectivity_c/infectivity_nc
 
 ## T defined by epidemic size on network
 # T = transmissibility of individual
-T_nc = 0.0643 # total epidemic size = 20%
-# T_nc = 0.075 # total epidemic size = 30%
+# T_nc = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
+# T_nc = 0.075 # total epidemic size (naive, no age-dep params) = 30%
+T_nc = 0.0502 # T_avg = 0.0643
 T_c = T_nc * infectivity_cnc
 # T = beta / (beta + gamma)
 b_c = (-T_c * gamma_c)/(T_c - 1) 
