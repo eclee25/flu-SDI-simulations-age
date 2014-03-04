@@ -92,12 +92,10 @@ for s in susc_list:
 	print "child susceptibility for current sims:", s
 	
 	# create dict for susceptibilities
-	# d_age_susc[str(age class code)] = susceptibility value
-	d_age_susc = {}
 	# children are the third age class in d_node_age
 	age_susc_list = [1, 1, s, 1, 1, 1] 
-	for ageclass, susc in zip(range(1, 7), age_susc_list):
-		d_age_susc[str(ageclass)] = susc
+	# d_age_susc[str(age class code)] = susceptibility value
+	d_age_susc = dict(zip(str(xrange(1, 7)), age_susc_list))
 	print d_age_susc.items()
 	
 	## save infection and recovery tsteps for each sim

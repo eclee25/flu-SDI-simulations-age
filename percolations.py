@@ -404,6 +404,65 @@ def episim_age_time_realistic(G, dict_node_age, dict_age_params):
 	
 	### return data structures
 	return len(recovered), I_tstep_savelist, R_tstep_savelist
+	
+####################################################
+# time-based age-structured simulation function with varying T by age group
+def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
+	''' Time-based age-structured simulation function that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. Different T multipliers may be set for each age group.
+	'''
+	
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()])
+	# Randomly choose one node as patient zero
+	p_zero = rnd.choice(G.nodes()) 
+	states[p_zero] = 'i'
+	
+	# keep track of infections over time
+	# time steps begin at 0
+	tstep = 0
+	infected_tstep = [p_zero]
+	
+	# number of nodes in graph
+	N = int(G.order())
+	
+	# record infection timestep for patient zero
+	# node 1 will be in column index 0 (nodes number from 1 to 10304)
+	I_tstep_savelist = [0] * N
+	I_tstep_savelist[int(p_zero)-1] = tstep 
+	
+	# create list to record recovery timesteps
+	R_tstep_savelist = [0] * N
+
+### simulation ###
+	while infected_tstep:
+		tstep += 1
+				
+		# S to I
+		suscep_tstep = [u for u in states if states[u] == 's']
+		# beta is different for infected child and non-child neighbors
+		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-(dict_age_betamodified['3'] * infected_child_neighbors(G, u, states, dict_node_age) + dict_age_betamodified['4'] * infected_nonchild_neighbors(G, u, states, dict_node_age))))]
+		for inf in new_infected:
+			I_tstep_savelist[int(inf)-1] = tstep
+
+		# I to R
+		new_recovered = [v for v in infected_tstep if rnd.random() < gamma]
+		for rec in new_recovered:
+			R_tstep_savelist[int(rec)-1] = tstep
+		
+		# update list of currently infected nodes for next tstep
+		infected_tstep = infected_tstep + new_infected
+		infected_tstep = [inf for inf in infected_tstep if inf not in new_recovered]
+		# update states dictionary
+		for new_i in new_infected:
+			states[new_i] = 'i'
+		for new_r in new_recovered:
+			states[new_r] = 'r'
+			
+	# report total epidemic size
+	recovered = [node for node in states if states[node] == 'r']
+
+	### return data structures ###
+	return len(recovered), I_tstep_savelist, R_tstep_savelist
 
 ####################################################
 def prob0infections(G, dict_node_age, states, beta_c, beta_nc, node):
@@ -507,13 +566,126 @@ def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_no
 
 	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
+####################################################
+def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, toddler_nodes, senior_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
+	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes, adult_nodes, toddler_nodes, and senior_nodes are binary lists indicating whether the nodeID is a child/adult/toddler/senior or not. Toddlers and seniors are considered high risk groups. Function returns five dictionaries for epidemic simulations: incidence rate by group, OR, total sim results, attack rate (number of infections/pop size), and OR filtered to time steps where 5-95% of cumulative incidence takes place. This function may be used for time sims for T, suscep, and recovery designations.
+	"""
+	
+	# filter time point parameters, 5% and 95% cumulative incidence
+	incl_min, incl_max = 0.05, 0.95
+	
+	# initialize Itstep and Rtstep dictionaries
+	# d_Itstep[(beta, simnumber)] = [infection tstep for node 1, infection tstep for node 2, ...]
+	dict_Itstep = defaultdict(list)
+	# d_Rtstep[(beta, simnumber)] = [recovery tstep for node 1, recovery tstep for node 2, ...]
+	dict_Rtstep = defaultdict(list)
+		
+	# import output file from ziparchive (5 sec)
+	with zipfile.ZipFile(zipname, 'r') as zf:
+		Itstep = zf.open(I_filename)
+		Rtstep = zf.open(R_filename)
+		simnumber = 0
+		for line1, line2 in zip(Itstep, Rtstep):
+			infected_tsteps = line1.split(', ')
+			recovered_tsteps = line2.split(', ')
+			# insert epidemics only into dicts
+			if sum([0 if not int(tstep) else 1 for tstep in infected_tsteps]) > epi_size:
+				dict_Itstep[(b_or_s, simnumber)] = [int(t) for t in infected_tsteps]
+				dict_Rtstep[(b_or_s, simnumber)] = [int(t) for t in recovered_tsteps]
+			simnumber += 1
+		
+	# total population size
+	N = float(len(child_nodes))
+	# size of child and adult populations
+	children, adults = float(sum(child_nodes)), float(sum(adult_nodes))
 
+	for b_or_s, simnum in dict_Itstep:
+		# initiate lists to store incidence in different age groups where list index is tstep
+		# skip counting patient zero in incidence and attack rate for convenience
+		tot_AR, c_AR, a_AR = [0],[0],[0]
+		# total, children, adult, toddler, senior
+		tot_incid, c_incid, a_incid, d_incid, s_incid = [0], [0], [0], [0], [0]
+		# child infection tsteps only, all else nan
+		c_tsteps = [c*t for c, t in zip(child_nodes, dict_Itstep[(b_or_s, simnum)])]
+		# adult infection tsteps only, all else nan
+		a_tsteps = [a*t for a, t in zip(adult_nodes, dict_Itstep[(b_or_s, simnum)])]
+		# toddler infection tsteps only, all else nan
+		d_tsteps = [d*t for d, t in zip(toddler_nodes, dict_Itstep[(b_or_s, simnum)])]
+		# senior infection tsteps only, all else nan
+		s_tsteps = [s*t for s, t in zip(senior_nodes, dict_Itstep[(b_or_s, simnum)])]
+		
+		# count number of new infections (0.15 sec)
+		# tstep 0 is skipped
+		for I_tstep in xrange(1, max(dict_Itstep[(b_or_s, simnum)]) + 1):
+			# number of new infections in total popn at I_tstep
+			dummy_tot_inf = len([inf for inf in dict_Itstep[(b_or_s, simnum)] if inf == I_tstep])
+			# number of new child infections in child popn at I_tstep
+			dummy_c_inf = len([inf for inf in c_tsteps if inf == I_tstep])
+			# number of new adult infections in adult pop at I_tstep
+			dummy_a_inf = len([inf for inf in a_tsteps if inf == I_tstep])
+			# number of new toddler infections in toddler pop at I_tstep
+			dummy_d_inf = len([inf for inf in d_tsteps if inf == I_tstep])
+			# number of new toddler infections in senior pop at I_tstep
+			dummy_s_inf = len([inf for inf in s_tsteps if inf == I_tstep])
+			
+			# append attack rate of total, child, and adult infections in respective total, child, and adult populations to list where index represents tstep
+			# use this to calculate OR
+			tot_AR.append(dummy_tot_inf/N)
+			c_AR.append(dummy_c_inf/children)
+			a_AR.append(dummy_a_inf/adults)
+			
+			# append incidence of total, child, and adult infections as raw counts
+			tot_incid.append(dummy_tot_inf)
+			c_incid.append(dummy_c_inf)
+			a_incid.append(dummy_a_inf)
+			d_incid.append(dummy_d_inf)
+			s_incid.append(dummy_s_inf)
+		
+		# recover attack rates over time in dictionary for each sim
+		dict_epiAR[(b_or_s, simnum, 'T')] = tot_AR
+		dict_epiAR[(b_or_s, simnum, 'C')] = c_AR
+		dict_epiAR[(b_or_s, simnum, 'A')] = a_AR
+				
+		# recover new cases over time in dictionary for each sim as raw counts
+		dict_epiincid[(b_or_s, simnum, 'T')] = tot_incid
+		dict_epiincid[(b_or_s, simnum, 'C')] = c_incid
+		dict_epiincid[(b_or_s, simnum, 'A')] = a_incid
+		dict_epiincid[(b_or_s, simnum, 'D')] = d_incid
+		dict_epiincid[(b_or_s, simnum, 'S')] = s_incid
+
+		
+		# recover OR
+		# if attack rate in children or adults is 0 or 1, float(nan) is returned because the OR cannot be appropriately calculated
+		OR_list = [((c/(1-c))/(a/(1-a))) if c and c < 1 and a and a < 1 else float('nan') for c, a in zip(c_AR, a_AR)]
+		dict_epiOR[(b_or_s, simnum)] = OR_list
+		
+		# recover general epi results
+		dict_epiresults[(b_or_s, simnum)] = (sum(tot_incid), sum(c_incid), sum(a_incid))
+		
+		# filter time points where current outbreak size is too small (just beginning or towards the end of the epidemic)
+		min_tstep, max_tstep = filter_time_points2(tot_incid, incl_min, incl_max)
+		
+		dict_epiOR_filt[(b_or_s, simnum)] = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
+
+	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
 ####################################################
 def infected_neighbors(G, node, states):
-    """ Calculate the number of infected neighbors for the node. 
+	""" Calculate the number of infected neighbors for the node. 
 	"""
-    return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i']) 
+	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i']) 
+
+####################################################
+def infected_child_neighbors(G, node, states, dict_node_age):
+	""" Calculate the number of infected child neighbors for the node. 
+	"""
+	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] == '3'])
+
+####################################################
+def infected_nonchild_neighbors(G, node, states, dict_node_age):
+	""" Calculate the number of infected non-child neighbors for the node. 
+	"""
+	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '3'])
 
 ####################################################
 def calc_OR_from_list(dict_node_age, infected_nodelist):
@@ -580,98 +752,20 @@ def calculate_beta(T, gamma, susc_node, dict_node_age, dict_age_susceptibility):
 	""" Calculate beta for a given susceptible node based on T and a susceptibility value for the susceptible node. Susceptibility values range from 0 (not susceptible at all) to 1 (completely susceptible). Susceptibility values are assigned by age class. This calculation operates under the assumption that T = infectivity * susceptibility.
 	"""
 
-	age_class = dict_node_age[susc_node]
-	T_mod = T * dict_age_susceptibility[age_class]
+	T_mod = T * dict_age_susceptibility[dict_node_age[susc_node]]
 	beta_mod = (-T_mod * gamma)/(T_mod - 1)
 	
 	# return beta value based on modified T value
 	return beta_mod
+
+####################################################
+def OR_sim(numbersims, dict_epiresults, Tmult, childsize, adultsize):
+	""" Calculates overall OR for an entire simulation based on dict_epiresults.
+	"""
 	
-	
-
-# ####################################################
-## don't think this function is needed anymore 11/20/13
-# def filter_time_points(tot_incidlist, recovered, incl_min, incl_max):
-# 	""" pairs with susc time sim only (11/6/13) In a time-based epidemic simulation, filter OR data points that may not be valid due to the small number of infected individuals at the beginning and end of an epidemic. For each simulation, define this period as the time period between which the percentage of infecteds is incl_min (float between 0 and 1) and incl_max (float between 0 and 1) percent of the cumulative epidemic size for that simulation. 
-# 	"""
-# 	
-# 	# list of included time steps
-# 	incl_tsteps = []
-# 	
-# 	for ct in xrange(len(tot_incidlist)):
-# 		# calculate cumulative number of cases at each time step
-# 		cum_ct = float(sum(tot_incidlist[:(ct+1)]))
-# 		if cum_ct/len(recovered) > incl_min and cum_ct/len(recovered) < incl_max:
-# 			incl_tsteps.append(ct)
-# 	
-# 	if incl_tsteps:
-# 		return min(incl_tsteps), max(incl_tsteps)
-# 	else:
-# 		return 0, 0
-
-	
-# ####################################################
-## don't think this function is needed anymore 11/6/13
-# def recreate_incid(extractfile, zipname, epi_size, child_nodes, adult_nodes):
-# 	""" For time-based epidemic simulations, recreate age-specific incidence from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns dictionary with simnumber and age class as a tuple key and values are incidence at each tstep for a single simulation. Note: patient zero will not be counted in incidence.
-# 	"""
-# 	
-# 	# calculate sizes of child and adult populations
-# 	child_size, adult_size = float(sum(child_nodes)), float(sum(adult_nodes))
-# 	
-# 	# import output file from ziparchive
-# 	with zipfile.ZipFile(zipname, 'r') as zf:
-# 		f = zf.open(extractfile)
-# 	
-# 	# dict to store results data
-# 	dict_Itstep = defaultdict(list)
-# 	simnumber = 0
-# 	
-# 	# import data to dict
-# 	for line in f:
-# 		vallist = line.split(',')
-# 		# dict_Itstep[simnumber] = [node1 infection tstep, node2 infection tstep...]
-# 		# float('nan') if node was not infected
-# 		# incorporate only sims where sim reached episize - count number of individuals infected in simulation
-# 		if sum([0 if math.isnan(float(val)) == True else int(val) for val in vallist]) > epi_size:
-# 			dict_Itstep[simnumber] = [0 if math.isnan(float(val)) == True else int(val) for val in vallist]
-# 		simnumber += 1
-# 	
-# 	# dict to store child and adult incidence
-# 	# dict_incid[(simnumber, 'C' or 'A')] = [C or A incid at tstep 0, C or A incid at tstep 1...]
-# 	dict_incid = defaultdict(list)
-# 	
-# 	for simnum in dict_Itstep:
-# 		# shows child and adult tsteps only - patient zero information will appear as 0
-# 		c_tsteps = [c*t for c, t in zip(child_nodes, dict_Itstep[simnum])]
-# 		a_tsteps = [a*t for a, t in zip(adult_nodes, dict_Itstep[simnum])]
-# # 		# replace NaNs with 0
-# # 		c_tsteps = [0 if tstep == float('nan') else tstep for tstep in c_tsteps]
-# # 		a_tsteps = [0 if tstep == float('nan') else tstep for tstep in a_tsteps]
-# 		
-# 		# create dummy lists for dict_incid values
-# 		dummy_c_incid = [0] * np.nanmax(c_tsteps + a_tsteps)
-# 		dummy_a_incid = [0] * np.nanmax(c_tsteps + a_tsteps)
-# 	
-# 		# index of dummy_c_incid is tstep and value of c_tsteps is tstep
-# 		for t, inf in enumerate(dummy_c_incid):
-# 			# we lost the information about age of patient zero, so just set incid for children and adults to 0 at t=0
-# 			if t == 0:
-# 				dummy_c_incid[t] = 0
-# 				dummy_a_incid[t] = 0
-# 			else:
-# 				dummy_c_incid[t] = sum([True if int(ts) == t else False for ts in c_tsteps])/child_size * 100
-# 				dummy_a_incid[t] = sum([True if int(ts) == t else False for ts in a_tsteps])/adult_size * 100
-# 		
-# 		dict_incid[(simnum, 'C')] = dummy_c_incid
-# 		dict_incid[(simnum, 'A')] = dummy_a_incid
-# 	
-# 	return dict_incid
-#
-
-
-
-
+	# dict_epiresults[(m, simnumber)] = (episize, c_episize, a_episize)
+	OR_sim_ls = [(dict_epiresults[key][1]/childsize)/(1 - (dict_epiresults[key][1]/childsize))/(dict_epiresults[key][2]/adultsize)/(1 - (dict_epiresults[key][2]/adultsize)) for key in dict_epiresults if key[0] == Tmult]
+	return OR_sim_ls
 
 
 

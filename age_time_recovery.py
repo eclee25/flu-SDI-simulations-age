@@ -43,7 +43,7 @@ import pretty_print as pp
 d_node_age = {} 
 
 ### simulation parameters ###
-numsims = 10  # number of simulations
+numsims = 800  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -51,8 +51,8 @@ inf_period = 5. # 5 days recovery for all non-children
 gamma = 1/inf_period
 # base values of T
 # see calculation for beta within simulation script
-T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
-# T = 0.075 # total epidemic size (naive, no age-dep params) = 30%
+# T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
+T = 0.075 # total epidemic size (naive, no age-dep params) = 30%
 # calculate base b for non-children when T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
 # when T = 0.075 and gamma = 1/5, b = 0.0162

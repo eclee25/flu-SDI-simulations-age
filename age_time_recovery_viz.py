@@ -44,8 +44,8 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # on avg, assume 5 days till recovery
 inf_period = 5. # 5 days recovery for all non-children
 gamma = 1/inf_period
-T = 0.0643 # total epidemic size = 20%
-# T = 0.075 # total epidemic size = 30%
+# T = 0.0643 # total epidemic size = 20%
+T = 0.075 # total epidemic size = 30%
 
 # T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
