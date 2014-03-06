@@ -46,9 +46,9 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
 gamma = 1/float(5) # 5 days recovery here
-# T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
+T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
 # T = 0.075 # total epidemic size (naive, no age-dep params) = 30%
-T = 0.0620 # T_avg = 0.0643 @ sigma_c = 1.15
+# T = 0.0620 # T_avg = 0.0643 @ sigma_c = 1.15
 
 # T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
@@ -76,7 +76,7 @@ for line in graph_ages:
         d_node_age[node] = age # node-ageclass dictionary
 
 N = float(G.order())
-print "network size:", net_size
+print "network size:", N
 
 # number of nodes of each age class
 c_size, a_size = perc.child_adult_size(d_node_age)
@@ -95,7 +95,7 @@ for s in susc_list:
 	# children are the third age class in d_node_age
 	age_susc_list = [1, 1, s, 1, 1, 1] 
 	# d_age_susc[str(age class code)] = susceptibility value
-	d_age_susc = dict(zip(str(xrange(1, 7)), age_susc_list))
+	d_age_susc = dict(zip('1,2,3,4,5,6,7'.split(','), age_susc_list))
 	print d_age_susc.items()
 	
 	## save infection and recovery tsteps for each sim

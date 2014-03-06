@@ -259,7 +259,20 @@ def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility)
 				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's']
-		new_infected = [u for u in suscep_tstep if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * infected_neighbors(G, u, states)))]
+		
+		# number of infected non-child neighbors for each susceptible
+		inei = [infected_neighbors(G, u, states) for u in suscep_tstep]
+		# d_infnei[suscep node] = # infected neighbors
+		d_infnei = dict(zip(suscep_tstep, inei)) 
+		# exclude values in dictionary where there are zero infected neighbors
+		d_infnei_sub = dict((k, d_infnei[k]) for k in d_infnei if d_infnei[k] > 0)
+		suscep_tstep_sub = [k for k in d_infnei_sub]
+				
+		new_infected = [u for u in suscep_tstep_sub if rnd.random() < (1- dict_age_susceptibility[dict_node_age[u]] * np.exp(-beta * d_infnei_sub[u]))]
+
+		# old way
+# 		new_infected = [u for u in suscep_tstep if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * infected_neighbors(G, u, states)))]
+
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
 
@@ -317,7 +330,21 @@ def episim_age_time_rec(G, dict_node_age, dict_age_recovery):
 				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's']
-		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-dict_age_recovery[dict_node_age[u]][0] * infected_neighbors(G, u, states)))]
+
+		# number of infected non-child neighbors for each susceptible
+		inei = [infected_neighbors(G, u, states) for u in suscep_tstep]
+		# d_infnei[suscep node] = # infected neighbors
+		d_infnei = dict(zip(suscep_tstep, inei)) 
+		# exclude values in dictionary where there are zero infected neighbors
+		d_infnei_sub = dict((k, d_infnei[k]) for k in d_infnei if d_infnei[k] > 0)
+		suscep_tstep_sub = [k for k in d_infnei_sub]
+				
+		new_infected = [u for u in suscep_tstep_sub if rnd.random() < (1- np.exp(-dict_age_recovery[dict_node_age[u]][0] * d_infnei_sub[u]))]
+		
+		# old way
+# 		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-dict_age_recovery[dict_node_age[u]][0] * infected_neighbors(G, u, states)))]
+
+		
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
 
@@ -432,6 +459,9 @@ def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
 	
 	# create list to record recovery timesteps
 	R_tstep_savelist = [0] * N
+	
+	# beta vals
+	b3, b4 = dict_age_betamodified['3'], dict_age_betamodified['4']
 
 ### simulation ###
 	while infected_tstep:
@@ -439,8 +469,24 @@ def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
 				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's']
+
 		# beta is different for infected child and non-child neighbors
-		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-(dict_age_betamodified['3'] * infected_child_neighbors(G, u, states, dict_node_age) + dict_age_betamodified['4'] * infected_nonchild_neighbors(G, u, states, dict_node_age))))]
+		
+		# old way 
+# 		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-(b3 * infected_child_neighbors(G, u, states, dict_node_age) + b4 * infected_nonchild_neighbors(G, u, states, dict_node_age))))]
+
+		# number of infected child neighbors for each susceptible 
+		icn = [infected_child_neighbors(G, u, states, dict_node_age) for u in suscep_tstep]
+		# number of infected non-child neighbors for each susceptible
+		inn = [infected_nonchild_neighbors(G, u, states, dict_node_age) for u in suscep_tstep]
+		# d_infnei[suscep node] = (# inf c_neighbors, # inf nc_neighbors)
+		d_infnei = dict(zip(suscep_tstep, zip(icn, inn))) 
+		# exclude values in dictionary where there are zero infected neighbors
+		d_infnei_sub = dict((k, d_infnei[k]) for k in d_infnei if sum(d_infnei[k]) > 0)
+		suscep_tstep_sub = [k for k in d_infnei_sub]
+				
+		new_infected = [u for u in suscep_tstep_sub if rnd.random() < (1- np.exp(-(b3 * d_infnei_sub[u][0] + b4 * d_infnei_sub[u][1])))]
+		
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
 
@@ -685,7 +731,7 @@ def infected_child_neighbors(G, node, states, dict_node_age):
 def infected_nonchild_neighbors(G, node, states, dict_node_age):
 	""" Calculate the number of infected non-child neighbors for the node. 
 	"""
-	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '3'])
+	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '4'])
 
 ####################################################
 def calc_OR_from_list(dict_node_age, infected_nodelist):

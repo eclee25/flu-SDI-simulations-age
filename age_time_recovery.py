@@ -51,8 +51,8 @@ inf_period = 5. # 5 days recovery for all non-children
 gamma = 1/inf_period
 # base values of T
 # see calculation for beta within simulation script
-# T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
-T = 0.075 # total epidemic size (naive, no age-dep params) = 30%
+T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
+# T = 0.075 # total epidemic size (naive, no age-dep params) = 30%
 # calculate base b for non-children when T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
 # when T = 0.075 and gamma = 1/5, b = 0.0162
@@ -102,8 +102,7 @@ for r in rec_list:
 	age_rec_list = [gamma, gamma, 1/r, gamma, gamma, gamma] 
 	# children are the third age class in d_node_age
 	for ageclass, rec in zip(range(1, 7), age_rec_list):
-		b_age = (-T * rec)/(T - 1)
-		d_age_rec[str(ageclass)] = (b_age, rec)
+		d_age_rec[str(ageclass)] = (b, rec)
 	print "ageclass code, (beta, gamma):", d_age_rec.items()
 	
 	## save infection and recovery tsteps for each sim
