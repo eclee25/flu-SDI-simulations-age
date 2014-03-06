@@ -41,7 +41,7 @@ import pretty_print as pp
 d_node_age = {} 
 
 ### simulation parameters ###
-numsims = 10  # number of simulations
+numsims = 800  # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
