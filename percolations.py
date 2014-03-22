@@ -268,7 +268,7 @@ def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility)
 		d_infnei_sub = dict((k, d_infnei[k]) for k in d_infnei if d_infnei[k] > 0)
 		suscep_tstep_sub = [k for k in d_infnei_sub]
 				
-		new_infected = [u for u in suscep_tstep_sub if rnd.random() < (1- dict_age_susceptibility[dict_node_age[u]] * np.exp(-beta * d_infnei_sub[u]))]
+		new_infected = [u for u in suscep_tstep_sub if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * d_infnei_sub[u]))] # 3/22/14 sigma was in the wrong place
 
 		# old way
 # 		new_infected = [u for u in suscep_tstep if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * infected_neighbors(G, u, states)))]
@@ -624,7 +624,7 @@ def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_no
 		# filter time points where current outbreak size is too small (just beginning or towards the end of the epidemic)
 		min_tstep, max_tstep = filter_time_points2(tot_incid, incl_min, incl_max)
 		
-		dict_epiOR_filt[(b_or_s, simnum)] = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
+		dict_epiOR_filt[(b_or_s, simnum)] = [float('nan') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
 
 	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
@@ -719,7 +719,7 @@ def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_n
 		# recover OR
 		# if attack rate in children or adults is 0 or 1, float(nan) is returned because the OR cannot be appropriately calculated
 		OR_list = [((c/(1-c))/(a/(1-a))) if c and c < 1 and a and a < 1 else float('nan') for c, a in zip(c_AR, a_AR)]
-		dict_epiOR[(b_or_s, simnum)] = OR_list
+		dict_epiOR[(round(b_or_s, 1), simnum)] = OR_list
 		
 		# recover general epi results
 		dict_epiresults[(b_or_s, simnum)] = (sum(tot_incid), sum(c_incid), sum(a_incid))
@@ -727,7 +727,7 @@ def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_n
 		# filter time points where current outbreak size is too small (just beginning or towards the end of the epidemic)
 		min_tstep, max_tstep = filter_time_points2(tot_incid, incl_min, incl_max)
 		
-		dict_epiOR_filt[(b_or_s, simnum)] = [float('NaN') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
+		dict_epiOR_filt[(b_or_s, simnum)] = [float('nan') if (num < min_tstep or num > max_tstep) else OR for num, OR in enumerate(OR_list)]
 
 	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
