@@ -5,7 +5,7 @@
 ###Author: Elizabeth Lee
 ###Date: 10/7/13
 ###Function:
-##### 1) increase transmissibility of children in steps from 1 to 1.5 in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
+##### 1) increase transmissibility of adults in steps from 1 to 2 in an attempt to observe a "severe season" pattern in the incidence curves (T = 0.0643, where episize = 20%); In severe seasons, incidence in children remains relatively the same but incidence in adults and consequently, other age groups tends to be quite a bit larger.
 
 ###Import data: urban_edges_Sarah.csv, urban_ages_Sarah.csv
 
@@ -41,7 +41,7 @@ import pretty_print as pp
 d_node_age = {} 
 
 ### simulation parameters ###
-numsims = 10 # number of simulations
+numsims = 800 # number of simulations
 size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
 # gamma = probability of recovery at each time step
 # on avg, assume 5 days till recovery
@@ -54,8 +54,9 @@ T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
 # when T = 0.075 and gamma = 1/5, b = 0.0162
 b = (-T * gamma)/(T - 1) 
 
-# define different child transmissibility multipliers
+# define different adult transmissibility multipliers
 # Cauchemez 2004 cites that household risk when there is a child infected vs when there is an adult infected is 1.85 times greater (0.48/0.26)
+# 3/22/14: During severe seasons, the epi curves for children tend to be the same magnitude but those of adults tend to be larger than normal. Perhaps the transmissibility and susceptibility of adults is higher in severe seasons, so that is what is being checked by changing T to refer to adults.
 m1, m2 = 1, 2
 Tmult_list = np.linspace(m1, m2, num=11, endpoint=True)
 
@@ -81,18 +82,18 @@ print "network size:", N
 c_size, a_size = perc.child_adult_size(d_node_age)
 
 ### ziparchive to write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/T-age_time_%ssims_beta%.3f_Tmult%.1f-%.1f_vax0.zip' %(numsims, b, m1, m2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultT-age_time_%ssims_beta%.3f_Tmult%.1f-%.1f_vax0.zip' %(numsims, b, m1, m2)
 
 ###############################################
 ### age-dependent T simulations ###
 totaltime = clock()
 
 for m in Tmult_list:
-	print "child T for current sims:", m*T
+	print "adult T for current sims:", m*T
 	
-	# create dict for T_c multipliers
-	# children are the third age class in d_node_age
-	age_Tmult_list = [1, 1, m, 1, 1, 1]
+	# create dict for T_a multipliers
+	# children are the third age class in d_node_age, adults are the fourth
+	age_Tmult_list = [1, 1, 1, m, 1, 1]
 	# age classes are in string format
 	ageclass = "1,2,3,4,5,6,7".split(',')
 	# d_age_Tmult[str(age class code)] = Tmult 
@@ -106,7 +107,7 @@ for m in Tmult_list:
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
-	# timer for all sims of one child susceptibility
+	# timer for all sims of one adult susceptibility
 	start_all = clock()
 	for num in xrange(numsims):
 		start = clock()
@@ -114,24 +115,24 @@ for m in Tmult_list:
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
 		print "simtime, simnum, episize:", clock() - start, "\t", num, "\t", total_rec
-	print "simtime for %s sims for child multiplier %1.1f" %(numsims, m), clock() - start_all
+	print "simtime for %s sims for adult multiplier %1.1f" %(numsims, m), clock() - start_all
 
 # print tsteps of infection and recovery to recreate sim
 # sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
-	filename = 'Results/Itstep_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
+	filename = 'Results/Itstep_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
 	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 	
-	filename = 'Results/Rtstep_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
+	filename = 'Results/Rtstep_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 
 print "total time for sims:", clock() - totaltime
 
-# reference table: probability of infection before adjusting for child T
+# reference table: probability of infection before adjusting for adult T
 # for inf in range(52):
 # 	print inf, 1- np.exp(-b * inf)
 
-T_c = [T*m for m in Tmult_list]
-T_avg = [(Tc * c_size + T * (N - c_size))/N for Tc in T_c]
-print "T_c, T_avg:", zip(T_c, T_avg)
+T_a = [T*m for m in Tmult_list]
+T_avg = [(Ta * a_size + T * (N - a_size))/N for Ta in T_a]
+print "T_a, T_avg:", zip(T_a, T_avg)

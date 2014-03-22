@@ -127,7 +127,7 @@ recov_epi = list(set([key[0] for key in d_epiincid]))
 c_mns, c_sds, a_mns, a_sds = [],[],[],[]
 d_mns, d_sds, s_mns, s_sds = [],[],[],[]
 for r in sorted(recov_epi):
-	# attack rate per 100 by age group
+	# attack rate by age group
 	C_episz_allsims = [sum(d_epiincid[key])/chsz for key in d_epiincid if key[0] == r and key[2] == 'C']
 	A_episz_allsims = [sum(d_epiincid[key])/adsz for key in d_epiincid if key[0] == r and key[2] == 'A']
 	D_episz_allsims = [sum(d_epiincid[key])/tosz for key in d_epiincid if key[0] == r and key[2] == 'D']
@@ -151,7 +151,7 @@ plt.ylabel('Attack Rate')
 lines = [CH, AD, TO, SR]
 plt.legend(lines, ['children (5-18)', 'adults (19-64)', 'toddlers (0-2)', 'seniors (65+)'], loc = 'upper left')
 plt.xlim([3, 15])
-plt.ylim([0, 0.9])
+plt.ylim([0, 1])
 figname = 'Figures/HR-AR_recov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 plt.savefig(figname)
 plt.close()
@@ -163,9 +163,9 @@ pp.compress_to_ziparchive(zipname, figname)
 plt.errorbar(sorted(recov_epi), [np.mean(d_totepiOR[r]) for r in sorted(recov_epi)], yerr = [np.std(d_totepiOR[r]) for r in sorted(recov_epi)], marker = 'o', color = 'black', linestyle = 'None')
 plt.xlabel('child infectious period in days (epidemics only)')
 plt.ylabel('simulation OR, child:adult')
-plt.ylim([0, 10])
+plt.ylim([0, 20])
 plt.xlim([3, 15])
-figname = 'Figures/totepiOR_recov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+figname = 'Figures/totepiOR_recov_time_%ssims_beta%.3f_recov_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)

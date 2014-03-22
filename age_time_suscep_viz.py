@@ -61,7 +61,7 @@ susc_list = np.linspace(s1, s2, num=6, endpoint=True)
 d_node_age = {} 
 
 ### ziparchive to read and write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/suscep_time_%ssims_beta%.3f_suscep%.1f-%.1f_vax0.zip' %(numsims, b, s1, s2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultsuscep_time_%ssims_beta%.3f_suscep%.1f-%.1f_vax0.zip' %(numsims, b, s1, s2)
 
 #############################################
 # age data processing
@@ -94,8 +94,8 @@ d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = defaultdict(list), de
 for s in susc_list:
 	processing = clock()
 	# reference filenames in zipfolder
-	Itstep_file = 'Results/Itstep_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
-	Rtstep_file = 'Results/Rtstep_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
+	Itstep_file = 'Results/Itstep_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
+	Rtstep_file = 'Results/Rtstep_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	# recreate epidata from zip archive
 	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata(Itstep_file, Rtstep_file, zipname, s, size_epi, ch, ad, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
 	print s, "processed", clock() - processing
@@ -112,11 +112,11 @@ for s in susc_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, child suscep: ' + str(s))
+	plt.xlabel('time step, adult suscep: ' + str(s))
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
-	figname = 'Figures/epiOR_susc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
+	figname = 'Figures/epiOR_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -130,11 +130,11 @@ for s in susc_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('sim time step, child suscep: ' + str(s) + ', 5-95% cum infections')
+	plt.xlabel('sim time step, adult suscep: ' + str(s) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
-	figname = 'Figures/epiORfilt_susc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
+	figname = 'Figures/epiORfilt_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -153,7 +153,7 @@ for s in susc_epi:
 	plt.ylabel('filtered OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
-figname = 'Figures/epiORfilt_susc_time_%ssims_beta%.3f_allsuscep_vax0.png' %(numsims, b)
+figname = 'Figures/epiORfilt_adultsusc_time_%ssims_beta%.3f_allsuscep_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)
@@ -166,45 +166,31 @@ for s in susc_epi:
 	pl_ls = [key for key in d_epiincid if key[0] == s and key[2] == 'T']
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')
-	plt.xlabel('time step, child suscep: ' + str(s))
+	plt.xlabel('time step, adult suscep: ' + str(s))
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 200])
-	figname = 'Figures/epiincid_susc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
+	figname = 'Figures/epiincid_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.png' %(numsims, b, s)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
 # 	plt.show()
 
 ##############################################
-### plot hist of episize by child suscep value ###
+### plot hist of episize by adult suscep value ###
 d_episize = defaultdict(list)
 for s in susc_epi:
 	d_episize[s] = [sum(d_epiincid[key]) for key in d_epiincid if key[0] == s and key[2] == 'T']
 plt.errorbar(susc_epi, [np.mean(d_episize[s]) for s in susc_epi], yerr = [np.std(d_episize[s]) for s in susc_epi], marker = 'o', color = 'black', linestyle = 'None')
-plt.xlim([0.9, 1.6])
-plt.xlabel('child susceptibility')
+plt.xlim([1.0, 1.5])
+plt.xlabel('adult susceptibility')
 plt.ylabel('epidemic size')
-figname = 'Figures/episize_susc_time_%ssims_beta%.3f_vax0.png' %(numsims, b)
+figname = 'Figures/episize_adultsusc_time_%ssims_beta%.3f_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)
 # plt.show()
 
 
-
-# ##############################################
-# ### this dict is no longer created in data processing
-# ### plot total OR by suscep ###
-# # one chart for all adult suscep values
-# plt.errorbar(susc_epi, [np.mean(d_epiOR_tot[s]) for s in susc_epi], yerr = [np.std(d_epiOR_tot[s]) for s in susc_epi], marker = 'o', color = 'black', linestyle = 'None')
-# plt.xlabel('adult susceptibility')
-# plt.ylabel('OR, child:adult')
-# plt.ylim([-1, 30])
-# figname = 'Figures/epiORtot_susc_time_%ssims_beta%.3f_susc%.1f-%.1f_vax0.png' %(numsims, b, s1, s2)
-# plt.savefig(figname)
-# plt.close()
-# pp.compress_to_ziparchive(zipname, figname)
-# # plt.show()
 
 
 

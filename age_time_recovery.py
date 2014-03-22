@@ -5,9 +5,9 @@
 ###Author: Elizabeth Lee
 ###Date: 12/23/13
 ###Function:
-##### 1) Change child infectious periods in steps relative to infectious periods of other age groups (while infectious period in all other age groups remains at 5 days) in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
+##### 1) Change adult infectious periods in steps relative to infectious periods of other age groups (while infectious period in all other age groups remains at 5 days) in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
 
-### Note: Simulations run fairly slow at longer child infectious periods (as expectd)
+### Note: Simulations run fairly slow at longer infectious periods (as expectd)
 
 ###Import data: urban_edges_Sarah.csv, urban_ages_Sarah.csv
 
@@ -58,7 +58,7 @@ T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
 # when T = 0.075 and gamma = 1/5, b = 0.0162
 b = (-T * gamma)/(T - 1) 
 
-# define different child infectious periods ranging from 3 to 15 days
+# define different adult infectious periods ranging from 3 to 15 days
 # Cauchemez2004 reports that children have an infectious period of 3.6 days and adults have an infectious period of 3.9 days (relative relationship is 3.6/3.9 = 0.923)
 # proportion of child infectious period relative to that of non-child infectious period 
 r1, r2 = 3, 15
@@ -87,20 +87,20 @@ print "network size:", N
 c_size, a_size = perc.child_adult_size(d_node_age)
 
 ### ziparchive to write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/recov_time_%ssims_beta%.3f_rec%.1f-%.1f_vax0.zip' %(numsims, b, r1, r2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultrecov_time_%ssims_beta%.3f_rec%.1f-%.1f_vax0.zip' %(numsims, b, r1, r2)
 
 ###############################################
 ### infectious period length simulations ###
 totaltime = clock()
 
 for r in rec_list:
-	print "child gamma for current sims:", r
+	print "adult gamma for current sims:", r
 	
 	# create dict for child and non-child betas, which are age-dependent on gamma, and gammas
 	# d_age_rec[str(age class code)] = (beta, gamma)
 	d_age_rec = {}
-	age_rec_list = [gamma, gamma, 1/r, gamma, gamma, gamma] 
-	# children are the third age class in d_node_age
+	age_rec_list = [gamma, gamma, gamma, 1/r, gamma, gamma] 
+	# children are the third age class in d_node_age, adults are the fourth
 	for ageclass, rec in zip(range(1, 7), age_rec_list):
 		d_age_rec[str(ageclass)] = (b, rec)
 	print "ageclass code, (beta, gamma):", d_age_rec.items()
@@ -110,7 +110,7 @@ for r in rec_list:
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
-	# timer for all sims of one child recovery 
+	# timer for all sims of one recovery value
 	start_all = clock()
 	for num in xrange(numsims):
 		start = clock()
@@ -118,25 +118,25 @@ for r in rec_list:
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
 		print "simtime, simnum, episize:", clock() - start, "\t", num, "\t", total_rec
-	print "simtime for %s sims for child gamma %1.1f" %(numsims, r), clock() - start_all
+	print "simtime for %s sims for adult gamma %1.1f" %(numsims, r), clock() - start_all
 
 # print tsteps of infection and recovery to recreate sim
 # sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
-	filename = 'Results/Itstep_recov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
+	filename = 'Results/Itstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
 	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 	
-	filename = 'Results/Rtstep_recov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
+	filename = 'Results/Rtstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 
 print "total time for sims:", clock() - totaltime
 
 # update below code for T_avg with varying gammas
-T_nc = b/(b + gamma)
+T_na = b/(b + gamma)
 for r in rec_list:
-	gamma_c = 1/r
-	T_c = b/(b + gamma_c)
-	T_avg = (T_c * c_size + T_nc * (N - c_size))/N
-	print "gamma_c, T_nc, T_c, T_avg:", gamma_c, T_nc, T_c, T_avg
+	gamma_a = 1/r
+	T_a = b/(b + gamma_a)
+	T_avg = (T_a * a_size + T_na * (N - a_size))/N
+	print "gamma_a, T_na, T_a, T_avg:", gamma_a, T_na, T_a, T_avg
 

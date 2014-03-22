@@ -5,7 +5,7 @@
 ###Author: Elizabeth Lee
 ###Date: 10/7/13
 ###Function:
-##### 1) increase susceptibility of children in steps from 1 to 1.5 in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
+##### 1) increase susceptibility of adults in steps from 1 to 1.5 in an attempt to observe a "mild season" pattern in the incidence curves (T = 0.0643, where episize = 20%)
 
 ###Import data: urban_edges_Sarah.csv, urban_ages_Sarah.csv
 
@@ -55,8 +55,9 @@ T = 0.0643 # total epidemic size (naive, no age-dep params) = 20%
 # when T = 0.075 and gamma = 1/5, b = 0.0162
 b = (-T * gamma)/(T - 1) 
 
-# define different child susceptibilities
+# define different adult susceptibilities
 # Cauchemez 2004 cites child susceptibility to be 1.15 times greater than that of adults
+# 3/22/14: During severe seasons, the epi curves for children tend to be the same magnitude but those of adults tend to be larger than normal. Perhaps the transmissibility and susceptibility of adults is higher in severe seasons, so that is what is being checked by changing T to refer to adults.
 s1, s2 = 1, 1.5
 susc_list = np.linspace(s1, s2, num=6, endpoint=True)
 
@@ -82,18 +83,18 @@ print "network size:", N
 c_size, a_size = perc.child_adult_size(d_node_age)
 
 ### ziparchive to write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/suscep_time_%ssims_beta%.3f_suscep%.1f-%.1f_vax0.zip' %(numsims, b, s1, s2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultsuscep_time_%ssims_beta%.3f_suscep%.1f-%.1f_vax0.zip' %(numsims, b, s1, s2)
 
 ###############################################
 ### susceptibility simulations ###
 totaltime = clock()
 
 for s in susc_list:
-	print "child susceptibility for current sims:", s
+	print "adult susceptibility for current sims:", s
 	
 	# create dict for susceptibilities
-	# children are the third age class in d_node_age
-	age_susc_list = [1, 1, s, 1, 1, 1] 
+	# children are the third age class in d_node_age, adults are the fourth
+	age_susc_list = [1, 1, 1, s, 1, 1] 
 	# d_age_susc[str(age class code)] = susceptibility value
 	d_age_susc = dict(zip('1,2,3,4,5,6,7'.split(','), age_susc_list))
 	print d_age_susc.items()
@@ -103,7 +104,7 @@ for s in susc_list:
 	d_save_I_tstep = defaultdict(list) 
 	d_save_R_tstep = defaultdict(list) 
 	
-	# timer for all sims of one child susceptibility
+	# timer for all sims of one adult susceptibility
 	start_all = clock()
 	for num in xrange(numsims):
 		start = clock()
@@ -111,15 +112,15 @@ for s in susc_list:
 		d_save_I_tstep[num] = I_tstep_list
 		d_save_R_tstep[num] = R_tstep_list
 		print "simtime, simnum, episize:", clock() - start, "\t", num, "\t", total_rec
-	print "simtime for %s sims for child suscep %1.1f" %(numsims, s), clock() - start_all
+	print "simtime for %s sims for adult suscep %1.1f" %(numsims, s), clock() - start_all
 
 # print tsteps of infection and recovery to recreate sim
 # sort order of sims so that the rows in d_save_I_tstep and d_save_R_tstep will match each other
-	filename = 'Results/Itstep_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
+	filename = 'Results/Itstep_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	pp.print_sorteddlist_to_file(d_save_I_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 	
-	filename = 'Results/Rtstep_susc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
+	filename = 'Results/Rtstep_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 	pp.compress_to_ziparchive(zipname, filename)
 
@@ -129,5 +130,5 @@ print "total time for sims:", clock() - totaltime
 for inf in range(52):
 	print inf, 1- np.exp(-b * inf)
 
-T_avg = (T * 1.15 * c_size + T * (N - c_size))/N
+T_avg = (T * 1.15 * a_size + T * (N - a_size))/N
 print "T_avg:", T_avg
