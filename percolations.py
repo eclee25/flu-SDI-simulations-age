@@ -629,7 +629,7 @@ def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_no
 	return dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt
 
 ####################################################
-def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, toddler_nodes, senior_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
+def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, toddler_nodes, senior_nodes):
 	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes, adult_nodes, toddler_nodes, and senior_nodes are binary lists indicating whether the nodeID is a child/adult/toddler/senior or not. Toddlers and seniors are considered high risk groups. Function returns five dictionaries for epidemic simulations: incidence rate by group, OR, total sim results, attack rate (number of infections/pop size), and OR filtered to time steps where 5-95% of cumulative incidence takes place. This function may be used for time sims for T, suscep, and recovery designations.
 	"""
 	
@@ -660,6 +660,9 @@ def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_n
 	N = float(len(child_nodes))
 	# size of child and adult populations
 	children, adults = float(sum(child_nodes)), float(sum(adult_nodes))
+
+	# initialize storage dictionaries (3/28/14)
+	dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list)
 
 	for b_or_s, simnum in dict_Itstep:
 		# initiate lists to store incidence in different age groups where list index is tstep
@@ -825,8 +828,13 @@ def OR_sim(numbersims, dict_epiresults, Tmult, childsize, adultsize):
 	""" Calculates overall OR for an entire simulation based on dict_epiresults.
 	"""
 	
-	# dict_epiresults[(m, simnumber)] = (episize, c_episize, a_episize)
-	OR_sim_ls = [(dict_epiresults[key][1]/childsize)/(1 - (dict_epiresults[key][1]/childsize))/(dict_epiresults[key][2]/adultsize)/(1 - (dict_epiresults[key][2]/adultsize)) for key in dict_epiresults if key[0] == Tmult]
+	# dict_epiresults[(Tmult, simnumber)] = (episize, c_episize, a_episize)
+	cAR = [dict_epiresults[key][1]/childsize for key in dict_epiresults if key[0] == Tmult]
+	aAR = [dict_epiresults[key][2]/adultsize for key in dict_epiresults if key[0] == Tmult]
+	# 3/28/14: there was an order of operations issue (parentheses) in the previous list comprehension, but this is now fixed
+	OR_sim_ls = [(c/(1-c))/(a/(1-a)) for c, a in zip(cAR, aAR)]
+	print "OR_sim_ls", OR_sim_ls
+
 	return OR_sim_ls
 
 
