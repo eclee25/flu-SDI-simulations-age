@@ -65,7 +65,7 @@ Tmult_list = np.linspace(m1, m2, num=11, endpoint=True)
 d_node_age = {} 
 
 ### ziparchive to read and write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/T-age_time_%ssims_beta%.3f_Tmult%.1f-%.1f_vax0.zip' %(numsims, b, m1, m2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultT-age_time_%ssims_beta%.3f_Tmult%.1f-%.1f_vax0.zip' %(numsims, b, m1, m2)
 
 #############################################
 # age data processing
@@ -105,16 +105,16 @@ print 'children, adults, toddlers, seniors', chsz, adsz, tosz, srsz
 # dict_epiOR_filt[(m, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
 # dict_epiresults[(m, simnumber)] = (episize, c_episize, a_episize)
 # d_totepiOR[m] = [OR at sim1, OR at sim 2...]
-d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt, d_totepiOR = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list), defaultdict(list)
+d_totepiOR = defaultdict(list)
 
 
 for m in Tmult_list:
 	processing = clock()
 	# reference filenames in zipfolder
-	Itstep_file = 'Results/Itstep_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
-	Rtstep_file = 'Results/Rtstep_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
+	Itstep_file = 'Results/Itstep_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
+	Rtstep_file = 'Results/Rtstep_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
 	# recreate epidata from zip archive
-	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, m, size_epi, ch, ad, to, sr, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
+	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, m, size_epi, ch, ad, to, sr)
 	# calculate OR over entire simulation
 	d_totepiOR[m] = perc.OR_sim(numsims, d_epiresults, m, chsz, adsz)
 	
@@ -149,13 +149,13 @@ CH = plt.errorbar(sorted(Tmult_epi), c_mns, yerr = c_sds, marker = 'o', color = 
 AD = plt.errorbar(sorted(Tmult_epi), a_mns, yerr = a_sds, marker = 'o', color = 'blue', linestyle = 'None')
 TO = plt.errorbar(sorted(Tmult_epi), d_mns, yerr = d_sds, marker = 'o', color = 'orange', linestyle = 'None')
 SR = plt.errorbar(sorted(Tmult_epi), s_mns, yerr = s_sds, marker = 'o', color = 'green', linestyle = 'None')
-plt.xlabel('child T multiplier (epidemics only)')
+plt.xlabel('adult T multiplier (epidemics only)')
 plt.ylabel('Attack Rate')
 lines = [CH, AD, TO, SR]
 plt.legend(lines, ['children (5-18)', 'adults (19-64)', 'toddlers (0-2)', 'seniors (65+)'], loc = 'upper left')
 plt.xlim([1, 2])
 plt.ylim([0, 1])
-figname = 'Figures/HR-AR_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
+figname = 'Figures/HR-AR_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)
@@ -166,11 +166,11 @@ pp.compress_to_ziparchive(zipname, figname)
 print "y-axis", [np.mean(d_totepiOR[m]) for m in sorted(Tmult_epi)]
 print "sd", [np.std(d_totepiOR[m]) for m in sorted(Tmult_epi)]
 plt.errorbar(sorted(Tmult_epi), [np.mean(d_totepiOR[m]) for m in sorted(Tmult_epi)], yerr = [np.std(d_totepiOR[m]) for m in sorted(Tmult_epi)], marker = 'o', color = 'black', linestyle = 'None')
-plt.xlabel('child T multiplier (epidemics only)')
+plt.xlabel('adult T multiplier (epidemics only)')
 plt.ylabel('simulation OR, child:adult')
 plt.ylim([0, 50])
 plt.xlim([1, 2])
-figname = 'Figures/totepiOR_T-age_time_%ssims_beta%.3f_Tmult_vax0.png' %(numsims, b)
+figname = 'Figures/totepiOR_adultT-age_time_%ssims_beta%.3f_Tmult_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)
@@ -184,11 +184,11 @@ for m in sorted(Tmult_epi):
 	mns.append(np.mean(mns_allsims))
 	sds.append(np.mean(mns_allsims))
 plt.errorbar(sorted(Tmult_epi), mns, yerr = sds, marker = 'o', color = 'black', linestyle = 'None')
-plt.xlabel('child T multiplier (epidemics only)')
+plt.xlabel('adult T multiplier (epidemics only)')
 plt.ylabel('simulation OR (avg of avgs), child:adult')
 plt.ylim([0, 5])
 plt.xlim([1, 2])
-figname = 'Figures/totepiOR-avgs_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
+figname = 'Figures/totepiOR-avgs_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)
@@ -216,11 +216,11 @@ for m in Tmult_epi:
 	
 		plt.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('epidemic time step, child T mult: ' + str(m) + ', 5-95% cum infections')
+	plt.xlabel('epidemic time step, adult T mult: ' + str(m) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 20])
 	plt.xlim([-1, 150])
-	figname = 'Figures/epiORalign_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
+	figname = 'Figures/epiORalign_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -269,12 +269,12 @@ for m in Tmult_epi:
 	yax_OR.set_ylabel('OR, child:adult')
 	yax_OR.set_ylim([0, 20])
 	yax_OR.set_xlim([-1, 150])
-	yax_OR.set_xlabel('epidemic time step, child T multiplier: ' + str(m) + ', 5-95% cum infections')
+	yax_OR.set_xlabel('epidemic time step, adult T multiplier: ' + str(m) + ', 5-95% cum infections')
 	yax_AR.set_ylabel('Incidence per 100')
 	yax_AR.set_ylim([0, 4])
 	
 	# save plot
-	figname = 'Figures/epiORincid_T-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
+	figname = 'Figures/epiORincid_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.png' %(numsims, b, m)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)

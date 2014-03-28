@@ -105,7 +105,7 @@ print 'children, adults, toddlers, seniors', chsz, adsz, tosz, srsz
 # dict_epiOR_filt[(s, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
 # dict_epiresults[(s, simnumber)] = (episize, c_episize, a_episize)
 # d_totepiOR[s] = [OR at sim1, OR at sim 2...]
-d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt, d_totepiOR = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list), defaultdict(list)
+d_totepiOR = defaultdict(list)
 
 for s in susc_list:
 	processing = clock()
@@ -113,7 +113,7 @@ for s in susc_list:
 	Itstep_file = 'Results/Itstep_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	Rtstep_file = 'Results/Rtstep_adultsusc_time_%ssims_beta%.3f_susc%.1f_vax0.txt' %(numsims, b, s)
 	# recreate epidata from zip archive
-	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, s, size_epi, ch, ad, to, sr, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
+	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, s, size_epi, ch, ad, to, sr)
 	# calculate OR over entire simulation
 	d_totepiOR[s] = perc.OR_sim(numsims, d_epiresults, s, chsz, adsz)
 	print s, "processed", clock() - processing
