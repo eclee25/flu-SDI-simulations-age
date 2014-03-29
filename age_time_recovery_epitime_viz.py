@@ -169,7 +169,7 @@ print "sim OR y-axis", [np.mean(d_totepiOR[r]) for r in sorted(recov_epi)]
 plt.errorbar(sorted(recov_epi), [np.mean(d_totepiOR[r]) for r in sorted(recov_epi)], yerr = [np.std(d_totepiOR[r]) for r in sorted(recov_epi)], marker = 'o', color = 'black', linestyle = 'None')
 plt.xlabel('adult infectious period in days (epidemics only)')
 plt.ylabel('simulation OR, child:adult')
-plt.ylim([0, 5])
+plt.ylim([0, 4])
 plt.xlim([3, 15])
 figname = 'Figures/totepiOR_recov_time_%ssims_beta%.3f_recov_vax0.png' %(numsims, b)
 plt.savefig(figname)
@@ -179,110 +179,110 @@ pp.compress_to_ziparchive(zipname, figname)
 
 
 
-# #############################################
-# ## plot avg of ORs at each tstep with std bars vs infectious period
-# mns, sds = [],[]
-# for r in sorted(recov_epi):
-# 	mns_allsims = [np.mean(np.ma.masked_array(d_epiOR[key], np.isnan(d_epiOR[key]))) for key in d_epiOR if key[0] == r]
-# 	mns.append(np.mean(mns_allsims))
-# 	sds.append(np.mean(mns_allsims))
-# plt.errorbar(sorted(recov_epi), mns, yerr = sds, marker = 'o', color = 'black', linestyle = 'None')
-# plt.xlabel('adult infectious period in days (epidemics only)')
-# plt.ylabel('simulation OR (avg of avgs), child:adult')
-# plt.ylim([0, 5])
-# plt.xlim([3, 15])
-# figname = 'Figures/totepiOR-avgs_adultrecov_time_%ssims_beta%.3frecov%.1f_vax0.png' %(numsims, b, r)
-# plt.savefig(figname)
-# plt.clf()
-# pp.compress_to_ziparchive(zipname, figname)
-# plt.show()
-#
-# ##############################################
-# ### plot filtered and aligned OR by time for each child recovery value ###
-# # alignment at tstep where sim reaches 5% of total episize
-# # starting tstep on plot is mode of tsteps where sim reaches 5% of total episize
-# # each sim is one line, each susc is a diff color on one plot
-#
-# for r in recov_epi:
-# 	ORonly = clock()
-#
-# 	# PROCESS X-AXIS: identify tstep at which sim reaches 5% of cum infections for the epidemic
-# 	# d_dummyalign_tstep[s] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
-# 	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, r, align_prop)
-#
-# 	# realign plots for epitime to start at t = 0 by reassigning avg_align_tstep
-# 	avg_align_tstep = 0
-#
-# 	# plot aligned data
-# 	# zip beta, episim number, and tstep for 5% cum-inf for sims where (s, episim number) is the key for d_epiOR_filt
-# 	for k0, k1, t5 in zip((k[0] for k in dummyk), (k[1] for k in dummyk), d_dummyalign_tstep[r]):
-# 	
-# 		plt.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
-# 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-# 	plt.xlabel('epidemic time step, adult recov: ' + str(r) + ', 5-95% cum infections')
-# 	plt.ylabel('OR, child:adult')
-# 	plt.ylim([0, 20])
-# 	plt.xlim([-1, 150])
-# 	figname = 'Figures/epiORalign_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
-# 	plt.savefig(figname)
-# 	plt.clf()
-# 	pp.compress_to_ziparchive(zipname, figname)
-# 	print "ORonly plotting time", r, clock() - ORonly
-# # 	plt.show()
-#
-# ##############################################
-# ### plot filtered and aligned OR by time for each suscep value ###
-# ### secondary axis with child and adult incidence ###
-# # alignment at tstep where sim reaches 5% of total episize
-# # starting tstep on plot is mode of tsteps where sim reaches 5% of total episize
-# # each sim is one line, each beta is a diff color on one plot
-#  
-# for r in recov_epi:
-# 	ORincid = clock()
-#
-# 	# PROCESS X-AXIS: identify tstep at which sim reaches 5% of cum infections for the epidemic
-# 	# d_dummyalign_tstep[suscept_val] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
-# 	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, r, align_prop)
-#
-# 	# realign plots for epitime to start at t = 0 by reassigning avg_align_tstep
-# 	avg_align_tstep = 0
-#
-# 	# PROCESS YAX_AR: 
-# 	# call upon d_epiAR dictionary
-# 	# dict_epiAR[(r, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per 100 individuals
-#
-# 	# plot data
-# 	# create two y-axes
-# 	fig, yax_OR = plt.subplots()
-# 	yax_AR = yax_OR.twinx()
-# 	
-# 	# zip s, episim number, and tstep for 5% cum-inf for sims where (s, episim number) is the key for d_epiOR_filt
-# 	for k0, k1, t5 in zip((k[0] for k in dummyk), (k[1] for k in dummyk), d_dummyalign_tstep[r]):
-# 	
-# 		## OR y-axis
-# 		OR, = yax_OR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
-# 		
-# 		## AR y-axis
-# 		child, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiAR[(k0, k1, 'C')][t5:])), [AR * 100 for AR in d_epiAR[(k0, k1, 'C')][t5:]], marker = 'None', color = 'red')
-# 		adult, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiAR[(k0, k1, 'A')][t5:])), [AR * 100 for AR in d_epiAR[(k0, k1, 'A')][t5:]], marker = 'None', color = 'blue')
-#
-# 	# plot settings
-# 	lines = [OR, child, adult]
-# 	yax_OR.legend(lines, ['Odds Ratio', 'Child Incidence', 'Adult Incidence'], loc = 'upper right')
-# 	yax_OR.set_ylabel('OR, child:adult')
-# 	yax_OR.set_ylim([0, 20])
-# 	yax_OR.set_xlim([-1, 150])
-# 	yax_OR.set_xlabel('epidemic time step, adult recovery: ' + str(r) + ', 5-95% cum infections')
-# 	yax_AR.set_ylabel('Incidence per 100')
-# 	yax_AR.set_ylim([0, 4])
-# 	
-# 	# save plot
-# 	figname = 'Figures/epiORincid_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
-# 	plt.savefig(figname)
-# 	plt.clf()
-# 	pp.compress_to_ziparchive(zipname, figname)
-# 	print "ORincid plotting time", r, clock() - ORincid
-# # 	plt.show()
+#############################################
+## plot avg of ORs at each tstep with std bars vs infectious period
+mns, sds = [],[]
+for r in sorted(recov_epi):
+	mns_allsims = [np.mean(np.ma.masked_array(d_epiOR[key], np.isnan(d_epiOR[key]))) for key in d_epiOR if key[0] == r]
+	mns.append(np.mean(mns_allsims))
+	sds.append(np.mean(mns_allsims))
+plt.errorbar(sorted(recov_epi), mns, yerr = sds, marker = 'o', color = 'black', linestyle = 'None')
+plt.xlabel('adult infectious period in days (epidemics only)')
+plt.ylabel('simulation OR (avg of avgs), child:adult')
+plt.ylim([0, 5])
+plt.xlim([3, 15])
+figname = 'Figures/totepiOR-avgs_adultrecov_time_%ssims_beta%.3frecov%.1f_vax0.png' %(numsims, b, r)
+plt.savefig(figname)
+plt.clf()
+pp.compress_to_ziparchive(zipname, figname)
+plt.show()
+
+##############################################
+### plot filtered and aligned OR by time for each child recovery value ###
+# alignment at tstep where sim reaches 5% of total episize
+# starting tstep on plot is mode of tsteps where sim reaches 5% of total episize
+# each sim is one line, each susc is a diff color on one plot
+
+for r in recov_epi:
+	ORonly = clock()
+
+	# PROCESS X-AXIS: identify tstep at which sim reaches 5% of cum infections for the epidemic
+	# d_dummyalign_tstep[s] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
+	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, r, align_prop)
+
+	# realign plots for epitime to start at t = 0 by reassigning avg_align_tstep
+	avg_align_tstep = 0
+
+	# plot aligned data
+	# zip beta, episim number, and tstep for 5% cum-inf for sims where (s, episim number) is the key for d_epiOR_filt
+	for k0, k1, t5 in zip((k[0] for k in dummyk), (k[1] for k in dummyk), d_dummyalign_tstep[r]):
+	
+		plt.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
+	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
+	plt.xlabel('epidemic time step, adult recov: ' + str(r) + ', 5-95% cum infections')
+	plt.ylabel('OR, child:adult')
+	plt.ylim([0, 20])
+	plt.xlim([-1, 150])
+	figname = 'Figures/epiORalign_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	plt.savefig(figname)
+	plt.clf()
+	pp.compress_to_ziparchive(zipname, figname)
+	print "ORonly plotting time", r, clock() - ORonly
+# 	plt.show()
+
+##############################################
+### plot filtered and aligned OR by time for each suscep value ###
+### secondary axis with child and adult incidence ###
+# alignment at tstep where sim reaches 5% of total episize
+# starting tstep on plot is mode of tsteps where sim reaches 5% of total episize
+# each sim is one line, each beta is a diff color on one plot
+ 
+for r in recov_epi:
+	ORincid = clock()
+
+	# PROCESS X-AXIS: identify tstep at which sim reaches 5% of cum infections for the epidemic
+	# d_dummyalign_tstep[suscept_val] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
+	d_dummyalign_tstep, avg_align_tstep, dummyk =  perc.define_epi_time(d_epiincid, r, align_prop)
+
+	# realign plots for epitime to start at t = 0 by reassigning avg_align_tstep
+	avg_align_tstep = 0
+
+	# PROCESS YAX_AR: 
+	# call upon d_epiAR dictionary
+	# dict_epiAR[(r, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per 100 individuals
+
+	# plot data
+	# create two y-axes
+	fig, yax_OR = plt.subplots()
+	yax_AR = yax_OR.twinx()
+	
+	# zip s, episim number, and tstep for 5% cum-inf for sims where (s, episim number) is the key for d_epiOR_filt
+	for k0, k1, t5 in zip((k[0] for k in dummyk), (k[1] for k in dummyk), d_dummyalign_tstep[r]):
+	
+		## OR y-axis
+		OR, = yax_OR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
+		
+		## AR y-axis
+		child, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiAR[(k0, k1, 'C')][t5:])), [AR * 100 for AR in d_epiAR[(k0, k1, 'C')][t5:]], marker = 'None', color = 'red')
+		adult, = yax_AR.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiAR[(k0, k1, 'A')][t5:])), [AR * 100 for AR in d_epiAR[(k0, k1, 'A')][t5:]], marker = 'None', color = 'blue')
+
+	# plot settings
+	lines = [OR, child, adult]
+	yax_OR.legend(lines, ['Odds Ratio', 'Child Incidence', 'Adult Incidence'], loc = 'upper right')
+	yax_OR.set_ylabel('OR, child:adult')
+	yax_OR.set_ylim([0, 20])
+	yax_OR.set_xlim([-1, 150])
+	yax_OR.set_xlabel('epidemic time step, adult recovery: ' + str(r) + ', 5-95% cum infections')
+	yax_AR.set_ylabel('Incidence per 100')
+	yax_AR.set_ylim([0, 4])
+	
+	# save plot
+	figname = 'Figures/epiORincid_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	plt.savefig(figname)
+	plt.clf()
+	pp.compress_to_ziparchive(zipname, figname)
+	print "ORincid plotting time", r, clock() - ORincid
+# 	plt.show()
 
 
 

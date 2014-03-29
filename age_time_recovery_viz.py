@@ -44,8 +44,8 @@ size_epi = 515 # threshold value that designates an epidemic in the network (5% 
 # on avg, assume 5 days till recovery
 inf_period = 5. # 5 days recovery for all non-children
 gamma = 1/inf_period
-# T = 0.0643 # total epidemic size = 20%
-T = 0.075 # total epidemic size = 30%
+T = 0.0643 # total epidemic size = 20%
+# T = 0.075 # total epidemic size = 30%
 
 # T = beta / (beta + gamma)
 # when T = 0.0643 and gamma = 1/5, b = 0.0137
@@ -61,7 +61,7 @@ rec_list = np.linspace(r1, r2, num=9, endpoint=True)
 d_node_age = {} 
 
 ### ziparchive to read and write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/recov_time_%ssims_beta%.3f_rec%.1f-%.1f_vax0.zip' %(numsims, b, r1, r2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultrecov_time_%ssims_beta%.3f_rec%.1f-%.1f_vax0.zip' %(numsims, b, r1, r2)
 
 #############################################
 # age data processing
@@ -93,8 +93,8 @@ d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = defaultdict(list), de
 
 for r in rec_list:
 	processing = clock()
-	Itstep_file = 'Results/Itstep_recov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
-	Rtstep_file = 'Results/Rtstep_recov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
+	Itstep_file = 'Results/Itstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
+	Rtstep_file = 'Results/Rtstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
 	# recreate epidata from zip archive
 	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata(Itstep_file, Rtstep_file, zipname, r, size_epi, ch, ad, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
 	print r, "processed", clock() - processing
@@ -110,11 +110,11 @@ for r in recov_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('time step, child recovery: ' + str(r))
+	plt.xlabel('time step, adult recovery: ' + str(r))
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
-	figname = 'Figures/epiOR_recov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	figname = 'Figures/epiOR_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -128,11 +128,11 @@ for r in recov_epi:
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('sim time step, child recovery: ' + str(r) + ', 5-95% cum infections')
+	plt.xlabel('sim time step, adult recovery: ' + str(r) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
-	figname = 'Figures/epiORfilt_recov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	figname = 'Figures/epiORfilt_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -151,7 +151,7 @@ for r in recov_epi:
 	plt.ylabel('filtered OR, child:adult')
 	plt.ylim([0, 30])
 	plt.xlim([-1, 200])
-figname = 'Figures/epiORfilt_recov_time_%ssims_beta%.3f_allrecov_vax0.png' %(numsims, b)
+figname = 'Figures/epiORfilt_adultrecov_time_%ssims_beta%.3f_allrecov_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)
@@ -164,10 +164,10 @@ for r in recov_epi:
 	pl_ls = [key for key in d_epiincid if key[0] == r and key[2] == 'T']
 	for key in pl_ls:
 		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')	
-	plt.xlabel('time step, child recov: ' + str(r))
+	plt.xlabel('time step, adult recov: ' + str(r))
 	plt.ylabel('number of new cases')
 	plt.xlim([-1, 200])
-	figname = 'Figures/epiincid_recov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	figname = 'Figures/epiincid_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 	plt.savefig(figname)
 	plt.close()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -180,9 +180,9 @@ for r in recov_epi:
 	d_episize[r] = [sum(d_epiincid[key]) for key in d_epiincid if key[0] == r and key[2] == 'T']
 plt.errorbar(recov_epi, [np.mean(d_episize[r]) for r in recov_epi], yerr = [np.std(d_episize[r]) for r in recov_epi], marker = 'o', color = 'black', linestyle = 'None')
 plt.xlim([2, 16])
-plt.xlabel('child recovery')
+plt.xlabel('adult recovery')
 plt.ylabel('epidemic size')
-figname = 'Figures/episize_recov_time_%ssims_beta%.3f_vax0.png' %(numsims, b)
+figname = 'Figures/episize_adultrecov_time_%ssims_beta%.3f_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.close()
 pp.compress_to_ziparchive(zipname, figname)

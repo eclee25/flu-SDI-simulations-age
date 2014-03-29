@@ -270,8 +270,6 @@ def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility)
 				
 		new_infected = [u for u in suscep_tstep_sub if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * d_infnei_sub[u]))] # 3/22/14 sigma was in the wrong place
 
-		# old way
-# 		new_infected = [u for u in suscep_tstep if rnd.random() < dict_age_susceptibility[dict_node_age[u]] * (1- np.exp(-beta * infected_neighbors(G, u, states)))]
 
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
@@ -340,9 +338,6 @@ def episim_age_time_rec(G, dict_node_age, dict_age_recovery):
 		suscep_tstep_sub = [k for k in d_infnei_sub]
 				
 		new_infected = [u for u in suscep_tstep_sub if rnd.random() < (1- np.exp(-dict_age_recovery[dict_node_age[u]][0] * d_infnei_sub[u]))]
-		
-		# old way
-# 		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-dict_age_recovery[dict_node_age[u]][0] * infected_neighbors(G, u, states)))]
 
 		
 		for inf in new_infected:
@@ -418,9 +413,6 @@ def episim_age_time_realistic(G, dict_node_age, dict_age_params):
 		suscep_tstep_sub = [k for k in d_infnei_sub]
 				
 		new_infected = [u for u in suscep_tstep_sub if rnd.random() < dict_age_params[dict_node_age[u]][0] * (1- np.exp(-beta_c * d_infnei_sub[u][0]) * np.exp(-beta_nc * d_infnei_sub[u][1]))]
-		
-		# old way
-# 		new_infected = [u for u in suscep_tstep if rnd.random() < dict_age_params[dict_node_age[u]][0] * (1 - prob0infections(G, dict_node_age, states, beta_c, beta_nc, u))]
 
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
@@ -499,9 +491,6 @@ def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
 				
 		new_infected = [u for u in suscep_tstep_sub if rnd.random() < (1- np.exp(-b3 * d_infnei_sub[u][0]) * np.exp(-b4 * d_infnei_sub[u][1]))]
 		
-		# old way 
-# 		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-(b3 * infected_child_neighbors(G, u, states, dict_node_age) + b4 * infected_nonchild_neighbors(G, u, states, dict_node_age))))]
-		
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
 
@@ -525,18 +514,6 @@ def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
 	### return data structures ###
 	return len(recovered), I_tstep_savelist, R_tstep_savelist
 
-# ####################################################
-# # obsolete as of 3/5/14 
-# def prob0infections(G, dict_node_age, states, beta_c, beta_nc, node):
-# 	''' Calculate probability of 0 infections for a single node where probability of infection per time step follows a Poisson process.
-# 	'''
-# 	
-# 	# count number of infected child and non-child neighbors
-# 	infected_child_neighbors = sum([1 for neighbor in G.neighbors(node) if dict_node_age[neighbor] == '3' and states[neighbor] == 'i'])
-# 	infected_nonchild_neighbors = sum([1 for neighbor in G.neighbors(node) if dict_node_age[neighbor] != '3' and states[neighbor] == 'i'])
-# 	prob0 = np.exp(-beta_c * infected_child_neighbors) * np.exp(-beta_nc * infected_nonchild_neighbors)
-# 	
-# 	return prob0
 
 ####################################################
 def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
@@ -747,7 +724,7 @@ def infected_child_neighbors(G, node, states, dict_node_age):
 def infected_nonchild_neighbors(G, node, states, dict_node_age):
 	""" Calculate the number of infected non-child neighbors for the node. 
 	"""
-	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '4'])
+	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '3'])
 
 ####################################################
 def calc_OR_from_list(dict_node_age, infected_nodelist):
