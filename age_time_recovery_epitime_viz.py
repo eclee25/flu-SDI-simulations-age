@@ -100,40 +100,38 @@ print 'children, adults, toddlers, seniors', chsz, adsz, tosz, srsz
 ##############################################
 # data processing - convert tstep info into dictionaries
 
-# storage dictionaries
+# storage dictionaries need to be initialized outside the loop
 # dict_epiincid[(r, simnumber, 'T', 'C' or 'A')] = [T, C or A incid at tstep 0, T, C or A incid at tstep 1...], where incidence is simply number of new cases (raw)
 # dict_epiAR[(r, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per population size
 # dict_epiOR[(r, simnumber)] = [OR at tstep0, OR at tstep1...]
 # dict_epiOR_filt[(r, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
 # dict_epiresults[(r, simnumber)] = (episize, c_episize, a_episize)
-# d_totepiOR[r] = [OR at sim1, OR at sim 2...]
-d_totepiOR = defaultdict(list)
+# d_totepiOR[r] = [attack rate OR at sim1, OR at sim 2...]
+d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt, d_totepiOR = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list), defaultdict(list)
 
 for r in rec_list:
 	processing = clock()
 	Itstep_file = 'Results/Itstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
 	Rtstep_file = 'Results/Rtstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
 	# recreate epidata from zip archive
-	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, r, size_epi, ch, ad, to, sr)
+	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, r, size_epi, ch, ad, to, sr, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
 	# calculate OR over entire simulation
 	d_totepiOR[r] = perc.OR_sim(numsims, d_epiresults, r, chsz, adsz)
 	print r, "processed", clock() - processing
 
 # grab unique list of child recovery rates that produced at least one epidemic
 recov_epi = list(set([key[0] for key in d_epiincid]))
+print recov_epi
 
 ##############################################
 ### plot total simulation AR with SD bars for children, adults, toddlers and the elderly vs infectious period (1/gamma)
 c_mns, c_sds, a_mns, a_sds = [],[],[],[]
 d_mns, d_sds, s_mns, s_sds = [],[],[],[]
 
-# troubleshoot 3/28
 for r in sorted(recov_epi):
 	# attack rate by age group
-	C_episz_allsims = [d_epiresults[key][1]/chsz for key in d_epiresults if key[0] == r]
-	A_episz_allsims = [d_epiresults[key][2]/adsz for key in d_epiresults if key[0] == r]
-# 	C_episz_allsims = [sum(d_epiincid[key])/chsz for key in d_epiincid if key[0] == r and key[2] == 'C']
-# 	A_episz_allsims = [sum(d_epiincid[key])/adsz for key in d_epiincid if key[0] == r and key[2] == 'A']
+	C_episz_allsims = [sum(d_epiincid[key])/chsz for key in d_epiincid if key[0] == r and key[2] == 'C']
+	A_episz_allsims = [sum(d_epiincid[key])/adsz for key in d_epiincid if key[0] == r and key[2] == 'A']
 	D_episz_allsims = [sum(d_epiincid[key])/tosz for key in d_epiincid if key[0] == r and key[2] == 'D']
 	S_episz_allsims = [sum(d_epiincid[key])/srsz for key in d_epiincid if key[0] == r and key[2] == 'S']
 	# add mean and SD attack rates to list for each Tmult value

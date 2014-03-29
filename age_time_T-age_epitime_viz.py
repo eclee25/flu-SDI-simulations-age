@@ -98,14 +98,14 @@ print 'children, adults, toddlers, seniors', chsz, adsz, tosz, srsz
 ##############################################
 # data processing - convert tstep info into dictionaries
 
-# declare dictionaries
+# storage dictionaries need to be declared outside the loop
 # dict_epiincid[(m, simnumber, 'T', 'C' or 'A')] = [T, C or A incid at tstep 0, T, C or A incid at tstep 1...], where incidence is simply number of new cases (raw)
 # dict_epiAR[(m, simnumber, 'T', 'C' or 'A')] = [T, C or A attack rate at tstep 0, T, C or A attack rate at tstep 1...], where attack rate is number of new cases per population size
 # dict_epiOR[(m, simnumber)] = [OR at tstep0, OR at tstep1...]
 # dict_epiOR_filt[(m, simnum)] = [OR for each time step for epidemics only where OR is nan when we want to exclude the time point due to small infected numbers]
 # dict_epiresults[(m, simnumber)] = (episize, c_episize, a_episize)
 # d_totepiOR[m] = [OR at sim1, OR at sim 2...]
-d_totepiOR = defaultdict(list)
+d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt, d_totepiOR = defaultdict(list), defaultdict(list), {}, defaultdict(list), defaultdict(list), defaultdict(list)
 
 
 for m in Tmult_list:
@@ -114,7 +114,7 @@ for m in Tmult_list:
 	Itstep_file = 'Results/Itstep_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
 	Rtstep_file = 'Results/Rtstep_adultT-age_time_%ssims_beta%.3f_Tmult%.1f_vax0.txt' %(numsims, b, m)
 	# recreate epidata from zip archive
-	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, m, size_epi, ch, ad, to, sr)
+	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, m, size_epi, ch, ad, to, sr, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
 	# calculate OR over entire simulation
 	d_totepiOR[m] = perc.OR_sim(numsims, d_epiresults, m, chsz, adsz)
 	
