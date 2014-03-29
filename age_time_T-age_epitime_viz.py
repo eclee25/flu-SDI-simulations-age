@@ -122,8 +122,7 @@ for m in Tmult_list:
 
 # grab unique list of Tmult values that produced at least one epidemic
 Tmult_epi = list(set([key[0] for key in d_epiincid]))
-print [d_epiresults[key] for key in d_epiresults if key[0] == 2.]
-print d_totepiOR[2.]
+
 
 ##############################################
 ### plot total simulation AR with SD bars for children, adults, toddlers and the elderly vs T multiplier value
@@ -163,12 +162,10 @@ pp.compress_to_ziparchive(zipname, figname)
 
 ##############################################
 ### plot total simulation OR with std bars vs T multiplier value
-print "y-axis", [np.mean(d_totepiOR[m]) for m in sorted(Tmult_epi)]
-print "sd", [np.std(d_totepiOR[m]) for m in sorted(Tmult_epi)]
 plt.errorbar(sorted(Tmult_epi), [np.mean(d_totepiOR[m]) for m in sorted(Tmult_epi)], yerr = [np.std(d_totepiOR[m]) for m in sorted(Tmult_epi)], marker = 'o', color = 'black', linestyle = 'None')
 plt.xlabel('adult T multiplier (epidemics only)')
 plt.ylabel('simulation OR, child:adult')
-plt.ylim([0, 50])
+plt.ylim([0, 4])
 plt.xlim([1, 2])
 figname = 'Figures/totepiOR_adultT-age_time_%ssims_beta%.3f_Tmult_vax0.png' %(numsims, b)
 plt.savefig(figname)
