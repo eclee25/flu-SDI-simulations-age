@@ -5,12 +5,12 @@
 ###Author: Elizabeth Lee
 ###Date: 12/31/13
 ###Function:
-##### Visualize results of time-based epidemic simulations where recovery rates vary for adults when aligned by epidemic time, which is defined as aligning tsteps at which simulation attained 5% of cumulative infections during the epidemic
+##### Visualize results of time-based epidemic simulations where recovery rates vary for children when aligned by epidemic time, which is defined as aligning tsteps at which simulation attained 5% of cumulative infections during the epidemic
 
 
 ###Import data: 
 
-###Command Line: python age_time_recovery_epitime_viz.py
+###Command Line: python age_time_childrecovery_epitime_viz.py
 ##############################################
 
 ### notes ###
@@ -67,7 +67,7 @@ rec_list = np.linspace(r1, r2, num=9, endpoint=True)
 d_node_age = {} 
 
 ### ziparchive to read and write results ###
-zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/adultrecov_time_%ssims_beta%.3f_rec%.1f-%.1f_vax0.zip' %(numsims, b, r1, r2)
+zipname = '/home/elee/Dropbox/Elizabeth_Bansal_Lab/Age_Based_Simulations/Results/childrecov_time_%ssims_beta%.3f_rec%.1f-%.1f_vax0.zip' %(numsims, b, r1, r2)
 
 #############################################
 # age data processing
@@ -111,8 +111,8 @@ d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt, d_totepiOR = defaultdi
 
 for r in rec_list:
 	processing = clock()
-	Itstep_file = 'Results/Itstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
-	Rtstep_file = 'Results/Rtstep_adultrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
+	Itstep_file = 'Results/Itstep_childrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
+	Rtstep_file = 'Results/Rtstep_childrecov_time_%ssims_beta%.3f_rec%.1f_vax0.txt' %(numsims, b, r)
 	# recreate epidata from zip archive
 	d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata2(Itstep_file, Rtstep_file, zipname, r, size_epi, ch, ad, to, sr, d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt)
 	# calculate OR over entire simulation
@@ -148,13 +148,13 @@ CH = plt.errorbar(sorted(recov_epi), c_mns, yerr = c_sds, marker = 'o', color = 
 AD = plt.errorbar(sorted(recov_epi), a_mns, yerr = a_sds, marker = 'o', color = 'blue', linestyle = 'None')
 TO = plt.errorbar(sorted(recov_epi), d_mns, yerr = d_sds, marker = 'o', color = 'orange', linestyle = 'None')
 SR = plt.errorbar(sorted(recov_epi), s_mns, yerr = s_sds, marker = 'o', color = 'green', linestyle = 'None')
-plt.xlabel('adult infectious period in days (epidemics only)')
+plt.xlabel('child infectious period in days (epidemics only)')
 plt.ylabel('Attack Rate')
 lines = [CH, AD, TO, SR]
 plt.legend(lines, ['children (5-18)', 'adults (19-64)', 'toddlers (0-2)', 'seniors (65+)'], loc = 'upper left')
 plt.xlim([3, 15])
 plt.ylim([0, 1])
-figname = 'Figures/HR-AR_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+figname = 'Figures/HR-AR_childrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 plt.savefig(figname)
 plt.clf()
 pp.compress_to_ziparchive(zipname, figname)
@@ -167,11 +167,11 @@ pp.compress_to_ziparchive(zipname, figname)
 print "sim OR y-axis", [np.mean(d_totepiOR[r]) for r in sorted(recov_epi)]
 
 plt.errorbar(sorted(recov_epi), [np.mean(d_totepiOR[r]) for r in sorted(recov_epi)], yerr = [np.std(d_totepiOR[r]) for r in sorted(recov_epi)], marker = 'o', color = 'black', linestyle = 'None')
-plt.xlabel('adult infectious period in days (epidemics only)')
+plt.xlabel('child infectious period in days (epidemics only)')
 plt.ylabel('simulation OR, child:adult')
-plt.ylim([0, 4])
+plt.ylim([0, 20])
 plt.xlim([3, 15])
-figname = 'Figures/totepiOR_adultrecov_time_%ssims_beta%.3f_recov_vax0.png' %(numsims, b)
+figname = 'Figures/totepiOR_childrecov_time_%ssims_beta%.3f_recov_vax0.png' %(numsims, b)
 plt.savefig(figname)
 plt.clf()
 pp.compress_to_ziparchive(zipname, figname)
@@ -187,15 +187,15 @@ for r in sorted(recov_epi):
 	mns.append(np.mean(mns_allsims))
 	sds.append(np.mean(mns_allsims))
 plt.errorbar(sorted(recov_epi), mns, yerr = sds, marker = 'o', color = 'black', linestyle = 'None')
-plt.xlabel('adult infectious period in days (epidemics only)')
+plt.xlabel('child infectious period in days (epidemics only)')
 plt.ylabel('simulation OR (avg of avgs), child:adult')
 plt.ylim([0, 5])
 plt.xlim([3, 15])
-figname = 'Figures/totepiOR-avgs_adultrecov_time_%ssims_beta%.3frecov%.1f_vax0.png' %(numsims, b, r)
+figname = 'Figures/totepiOR-avgs_childrecov_time_%ssims_beta%.3frecov%.1f_vax0.png' %(numsims, b, r)
 plt.savefig(figname)
 plt.clf()
 pp.compress_to_ziparchive(zipname, figname)
-plt.show()
+# plt.show()
 
 ##############################################
 ### plot filtered and aligned OR by time for each child recovery value ###
@@ -219,11 +219,11 @@ for r in recov_epi:
 	
 		plt.plot(xrange(avg_align_tstep, avg_align_tstep+len(d_epiOR_filt[(k0, k1)][t5:])), d_epiOR_filt[(k0, k1)][t5:], marker = 'None', color = 'grey')
 	plt.plot(xrange(250), [1] * len(xrange(250)), marker = 'None', color = 'red', linewidth = 2)
-	plt.xlabel('epidemic time step, adult recov: ' + str(r) + ', 5-95% cum infections')
+	plt.xlabel('epidemic time step, child recov: ' + str(r) + ', 5-95% cum infections')
 	plt.ylabel('OR, child:adult')
 	plt.ylim([0, 20])
 	plt.xlim([-1, 150])
-	figname = 'Figures/epiORalign_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	figname = 'Figures/epiORalign_childrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 	plt.savefig(figname)
 	plt.clf()
 	pp.compress_to_ziparchive(zipname, figname)
@@ -272,12 +272,12 @@ for r in recov_epi:
 	yax_OR.set_ylabel('OR, child:adult')
 	yax_OR.set_ylim([0, 20])
 	yax_OR.set_xlim([-1, 150])
-	yax_OR.set_xlabel('epidemic time step, adult recovery: ' + str(r) + ', 5-95% cum infections')
+	yax_OR.set_xlabel('epidemic time step, child recovery: ' + str(r) + ', 5-95% cum infections')
 	yax_AR.set_ylabel('Incidence per 100')
 	yax_AR.set_ylim([0, 4])
 	
 	# save plot
-	figname = 'Figures/epiORincid_adultrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
+	figname = 'Figures/epiORincid_childrecov_time_%ssims_beta%.3f_recov%.1f_vax0.png' %(numsims, b, r)
 	plt.savefig(figname)
 	plt.clf()
 	pp.compress_to_ziparchive(zipname, figname)
