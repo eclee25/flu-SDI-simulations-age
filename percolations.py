@@ -29,7 +29,7 @@
 # dict_node_age[node] = 'ageclasscode'
 # dict_simresults[(T, simulationnumber)] = (recovered_children, recovered_adults, recovered_total)
 # dict_simepi[(T, simulationnumber)] = (recovered_children, recovered_adults, recovered_total) # subset of dict_simresults for epidemics only
-# dict_epiincid[(T, 'C' or 'A')] = child or adult attack rate
+# dict_epiincid[(code, sim number, T/C/A/D/S)] = cases over duration of epidemic
 
 ### other variables
 # episize = number of nodes infected that defines an epidemic on the network (often defined as 5% of network size)
@@ -45,13 +45,13 @@ import bisect
 from time import clock
 
 
-
 # functions
 ####################################################
 # number of child and adult nodes in network
 def child_adult_size(dict_node_age):
 	''' Return the number of child and adult nodes in the network. 
 	'''
+	main(child_adult_size)
 	child_size = len([node for node in dict_node_age if dict_node_age[node] =='3'])
 	adult_size = len([node for node in dict_node_age if dict_node_age[node] =='4'])
 	return float(child_size), float(adult_size)
@@ -61,6 +61,7 @@ def child_adult_size(dict_node_age):
 def epidemicsonly(dict_simresults, episize):
 	''' From a dictionary of all results, return a dictionary subset of the epidemic results only. 
 	'''
+	main(epidemicsonly)
 	return dict((k, dict_simresults[k]) for k in dict_simresults if dict_simresults[k][2] > episize)
 
 ####################################################
@@ -68,6 +69,7 @@ def epidemicsonly(dict_simresults, episize):
 def rnd_vax(G, vaxcov):
 	''' Implement a random vax strategy on a graph where vax efficacy is 100% and vax coverage is vaxcov%.
 	'''
+	main(rnd_vax)
 	for n in G.nodes():
 		if rnd.random() < vaxcov:
 			G.remove_edges_from(G.edges(n))
@@ -77,6 +79,7 @@ def rnd_vax(G, vaxcov):
 def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
 	''' Age-structured percolation function with random vaccination with low (0.245) and high (0.455) coverage scenarios. Susceptibility (1 - vax efficacy) is set outside the function and vaccinated individuals have a probability of T * susceptibility of infection. The function returns the number of children, adults, total infected, and total vaccinated during th simulation.
 	'''
+	main(perc_age_vaxeff)
 
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -131,6 +134,7 @@ def perc_age_vaxeff(G, dict_node_age, T, vaxcov_scen, susceptibility):
 def perc_age_gen(G, dict_node_age, T):
 	''' General age-structured percolation function that returns the number of children, adults, and total infected individuals during the simulation.
 	'''
+	main(perc_age_gen)
 	
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -172,6 +176,7 @@ def perc_age_gen(G, dict_node_age, T):
 def episim_age_time(G, dict_node_age, beta, gamma):
 	''' Time-based simulation function for age-structured networks that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. A graph, node-age class dictionary, and beta and gamma values must be provided.
 	'''
+	main(episim_age_time)
 	
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -226,10 +231,72 @@ def episim_age_time(G, dict_node_age, beta, gamma):
 	return len(recovered), I_tstep_savelist, R_tstep_savelist
 
 ####################################################
+# time-based age-structured simulation function for sick behavior 
+def episim_age_time_sickbehav(G, dict_node_age, beta, gamma, delay, cut, pop):
+	''' Time-based simulation function for age-structured networks that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. A graph, node-age class dictionary, and beta and gamma values must be provided. Infected children, adults, or both lose cut proportion of school or work contacts during infectious period after delay days.
+	'''	
+	# set initial conditions
+	states = dict([(node, 's') for node in G.nodes()]) # states[nodenumber] = state
+	states_tstep = dict([(node, 0) for node in G.nodes()]) # states_tstep[nodenumber] = tstep at which current state was achieved
+	# Randomly choose one node as patient zero
+	p_zero = rnd.choice(G.nodes()) 
+	states[p_zero] = 'i'
+	states_tstep[p_zero] = 0
+		
+	# keep track of infections over time
+	# time steps begin at 0
+	tstep = 0
+	infected_tstep = [p_zero]
+	
+	# number of nodes in graph
+	N = int(G.order())
+	
+	# record infection timestep for patient zero
+	# node 1 will be in column index 0 (nodes number from 1 to 10304)
+	I_tstep_savelist = [0] * N
+	I_tstep_savelist[int(p_zero)-1] = tstep 
+	
+	# create list to record recovery timesteps
+	R_tstep_savelist = [0] * N
+
+### simulation ###
+	while infected_tstep:
+		tstep += 1
+				
+		# S to I
+		suscep_tstep = [u for u in states if states[u] == 's' and infected_neighbors(G, u, states) > 0]
+		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-beta*infected_neighbors_sickbehav(G, u, states, states_tstep, dict_node_age, delay, pop, cut)))]
+		for inf in new_infected:
+			I_tstep_savelist[int(inf)-1] = tstep
+
+		# I to R
+		new_recovered = [v for v in infected_tstep if rnd.random() < gamma]
+		for rec in new_recovered:
+			R_tstep_savelist[int(rec) - 1] = tstep
+
+		# update list of currently infected nodes for next tstep
+		infected_tstep = infected_tstep + new_infected
+		infected_tstep = [inf for inf in infected_tstep if inf not in new_recovered]
+		# update states and states_tstep dictionaries
+		for new_i in new_infected:
+			states[new_i] = 'i'
+			states_tstep[new_i] = tstep
+		for new_r in new_recovered:
+			states[new_r] = 'r'
+			states_tstep[new_r] = tstep
+	
+	# report total epidemic size
+	recovered = [node for node in states if states[node] == 'r']
+
+	### return data structures ###
+	return len(recovered), I_tstep_savelist, R_tstep_savelist
+
+####################################################
 # time-based age-structured simulation function with varying susceptibilities by age group
 def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility):
 	''' Time-based age-structured simulation function that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. Different susceptibility values may be set for each age group.
 	'''
+	main(episim_age_time_susc)
 	
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -299,6 +366,7 @@ def episim_age_time_susc(G, dict_node_age, beta, gamma, dict_age_susceptibility)
 def episim_age_time_rec(G, dict_node_age, dict_age_recovery):
 	''' Time-based age-structured simulation function that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. Different recovery rates (1/infectious period) may be set for each age group in the main code and imported as pre-calculated betas in dict_age_recovery.
 	'''
+	main(episim_age_time_rec)
 	
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -367,6 +435,7 @@ def episim_age_time_rec(G, dict_node_age, dict_age_recovery):
 def episim_age_time_realistic(G, dict_node_age, dict_age_params):
 	''' Realistic time-based age-structured simulation function.
 	'''
+	main(episim_age_time_realistic)
 	
 	# pull parameters from dict
 	sigma_c, beta_c, gamma_c = dict_age_params['3']
@@ -444,6 +513,7 @@ def episim_age_time_realistic(G, dict_node_age, dict_age_params):
 def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
 	''' Time-based age-structured simulation function that returns the number of total infected individuals, infection time step per node, and recovery time step per node during the simulation. Different T multipliers may be set for each age group.
 	'''
+	main(episim_age_time_T)
 	
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()])
@@ -519,6 +589,7 @@ def episim_age_time_T(G, dict_node_age, beta, gamma, dict_age_betamodified):
 def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
 	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes and adult_nodes are binary lists indicating whether the nodeID is a child/adult or not. Function returns five dictionaries for epidemic simulations: incidence rate by group, OR, total sim results, attack rate (number of infections/pop size), and OR filtered to time steps where 5-95% of cumulative incidence takes place. This function may be used for time sims for T, suscep, and recovery designations.
 	"""
+	main(recreate_epidata)
 	
 	# filter time point parameters, 5% and 95% cumulative incidence
 	incl_min, incl_max = 0.05, 0.95
@@ -609,6 +680,7 @@ def recreate_epidata(I_filename, R_filename, zipname, b_or_s, epi_size, child_no
 def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_nodes, adult_nodes, toddler_nodes, senior_nodes, dict_epiincid, dict_epiOR, dict_epiresults, dict_epiAR, dict_epiOR_filt):
 	""" For time-based epidemic simulations, recreate total and age-specific incidence, OR, and general sim results from simulation output file of timestep at which each node got infected, where column indexes are node IDs minus one and rows are simulation results. child_nodes, adult_nodes, toddler_nodes, and senior_nodes are binary lists indicating whether the nodeID is a child/adult/toddler/senior or not. Toddlers and seniors are considered high risk groups. Function returns five dictionaries for epidemic simulations: incidence rate by group, OR, total sim results, attack rate (number of infections/pop size), and OR filtered to time steps where 5-95% of cumulative incidence takes place. This function may be used for time sims for T, suscep, and recovery designations.
 	"""
+	main(recreate_epidata2)
 	
 	# filter time point parameters, 5% and 95% cumulative incidence
 	incl_min, incl_max = 0.05, 0.95
@@ -696,7 +768,7 @@ def recreate_epidata2(I_filename, R_filename, zipname, b_or_s, epi_size, child_n
 		# recover OR
 		# if attack rate in children or adults is 0 or 1, float(nan) is returned because the OR cannot be appropriately calculated
 		OR_list = [((c/(1-c))/(a/(1-a))) if c and c < 1 and a and a < 1 else float('nan') for c, a in zip(c_AR, a_AR)]
-		dict_epiOR[(round(b_or_s, 1), simnum)] = OR_list
+		dict_epiOR[(b_or_s, simnum)] = OR_list # round(b_or_s, 1) may be necessary for key[0]
 		
 		# recover general epi results
 		dict_epiresults[(b_or_s, simnum)] = (sum(tot_incid), sum(c_incid), sum(a_incid))
@@ -727,9 +799,56 @@ def infected_nonchild_neighbors(G, node, states, dict_node_age):
 	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '3'])
 
 ####################################################
+def infected_neighbors_sickbehav(G, node, states, states_tstep, dict_node_age, delay, pop, cut):
+	""" Calculate the number of infected neighbors for the node. Infected neighbors cannot infect work or school contacts after 'delay' number of days if they are adults or children, respectively. 'pop' parameter designates whether the simulation cuts these contacts for infected adults, children, or both. 'cut' parameter designates the proportion of contacts that are cut after 'delay' number of days has passed for infected adults/children with work/school contacts.
+	"""
+	pop_options = ['A', 'C', 'AC', 'CA']
+	active_nonschoolwork, active_nonschool, active_schoolnonchild, active_schoolchilddelay, active_schoolchildpostdelay, active_nonwork, active_worknonadult, active_workadultdelay, active_workadultpostdelay = [],[],[],[],[],[],[],[],[]
+	active_neighbors = [nei for nei in G.neighbors(node) if states[nei] == 'i']
+	
+	if pop not in pop_options:
+		print 'pop parameter error'
+
+	elif pop == 'C':
+		active_nonschool = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] != 'S']
+		active_schoolnonchild = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] != 3] # school contact where infected neighbor is not a child
+		active_schoolchilddelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] < delay] # schoolchild may always infect at school before "delay" number of days has passed during infectious period 
+		active_schoolchildpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] >= delay and rnd.random() > cut] # schoolchild may infect at school after "delay" number of days "1-cut" proportion of the time; this is an approximation because the identity of the individuals that are staying home is not fixed
+
+		if sorted(active_nonschool + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay) != sorted(set(active_nonschool + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay)):
+			print "pop C error" # check that neighbors were not double counted
+	
+	elif pop == 'A':
+		active_nonwork = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] != 'W']
+		active_worknonadult = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] != 4]
+		active_workadultdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] < delay]
+		active_workadultpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] >= delay and rnd.random() > cut] 
+
+		if sorted(active_nonwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay) != sorted(set(active_nonwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay)):
+			print "pop A error"
+
+	else: # if pop == 'AC' or 'CA'
+		active_nonschoolwork = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] not in list('WS')] # neither school nor work infected contacts because conditions apply to both of those edge types
+		active_schoolnonchild = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] != 3] 
+		active_schoolchilddelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] < delay] 
+		active_schoolchildpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] >= delay and rnd.random() > cut]
+		active_worknonadult = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] != 4]
+		active_workadultdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] < delay]
+		active_workadultpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] >= delay and rnd.random() > cut] 
+
+		if sorted(active_nonschoolwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay) != sorted(set(active_nonschoolwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay)):
+			print "pop AC error"
+
+	neighbor_ct = len(active_nonschoolwork) + len(active_nonschool) + len(active_schoolnonchild) + len(active_schoolchilddelay) + len(active_schoolchildpostdelay) + len(active_nonwork) + len(active_worknonadult) + len(active_workadultdelay) + len(active_workadultpostdelay)	
+
+	return float(neighbor_ct)
+
+####################################################
 def calc_OR_from_list(dict_node_age, infected_nodelist):
 	""" Calculate OR from list of infected nodes. Return OR as 1.0 if numerator or denominator are 0. 
 	"""
+	main(calc_OR_from_list)
+
 	infected_child = sum([1 for node in infected_nodelist if dict_node_age[node] == '3'])
 	infected_adult = sum([1 for node in infected_nodelist if dict_node_age[node] == '4'])
 	
@@ -754,7 +873,7 @@ def calc_OR_from_list(dict_node_age, infected_nodelist):
 def filter_time_points2(tot_incidlist, incl_min, incl_max):
 	""" pairs with reg time sim only (11/6/13) In a time-based epidemic simulation, filter OR data points that may not be valid due to the small number of infected individuals at the beginning and end of an epidemic. For each simulation, define this period as the time period between which the percentage of infecteds is incl_min (float between 0 and 1) and incl_max (float between 0 and 1) percent of the cumulative epidemic size for that simulation. 
 	"""
-	
+
 	# calculate cumulative number of cases at each time step
 	cum_ct = np.cumsum(tot_incidlist)
 	# generate list of time steps where cumulative number of cases is between incl_min and incl_max proportion of total cases in epidemic
@@ -770,6 +889,7 @@ def filter_time_points2(tot_incidlist, incl_min, incl_max):
 def define_epi_time(dict_epiincid, b_or_s, align_proportion):
 	""" For time-based epidemic simulations, identify the tstep at which the simulation reaches align_proportion proportion of cumulative infections for the epidemic. The goal is to align the epidemic trajectories at the point where the tsteps are comparable for each simulation. Returns dict where key = beta or s and value = list of tstep at which simulations that reached epidemic sizes attained 5% cumulative infections. 
 	"""
+	main(define_epi_time)
 	
 	dummykeys = [k for k in dict_epiincid if k[0] == b_or_s and k[2] == 'T']
 	# dict_dummyalign_tstep[b_or_s] = [5%cum-inf_tstep_sim1, 5%cum-inf_tstep_sim2..]
@@ -790,6 +910,7 @@ def define_epi_time(dict_epiincid, b_or_s, align_proportion):
 def calculate_beta(T, gamma, susc_node, dict_node_age, dict_age_susceptibility):
 	""" Calculate beta for a given susceptible node based on T and a susceptibility value for the susceptible node. Susceptibility values range from 0 (not susceptible at all) to 1 (completely susceptible). Susceptibility values are assigned by age class. This calculation operates under the assumption that T = infectivity * susceptibility.
 	"""
+	main(calculate_beta)
 
 	T_mod = T * dict_age_susceptibility[dict_node_age[susc_node]]
 	beta_mod = (-T_mod * gamma)/(T_mod - 1)
@@ -801,6 +922,7 @@ def calculate_beta(T, gamma, susc_node, dict_node_age, dict_age_susceptibility):
 def OR_sim(numbersims, dict_epiresults, Tmult, childsize, adultsize):
 	""" Calculates overall OR for an entire simulation based on dict_epiresults.
 	"""
+	main(OR_sim)
 	
 	# dict_epiresults[(Tmult, simnumber)] = (episize, c_episize, a_episize)
 	cAR = [dict_epiresults[key][1]/childsize for key in dict_epiresults if key[0] == Tmult]
@@ -813,7 +935,16 @@ def OR_sim(numbersims, dict_epiresults, Tmult, childsize, adultsize):
 
 
 
+##############################################
+##############################################
+# footer
 
+def main(function):
+	print 'Running', __name__, function.__name__
+
+if __name__ == '__main__':
+	print 'Executed from the command line'
+	main()
 
 
 
