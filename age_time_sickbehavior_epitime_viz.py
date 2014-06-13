@@ -109,7 +109,7 @@ d_totepiOR[code] = perc.OR_sim(numsims, d_epiresults, code, chsz, adsz)
 print code, "processed", clock() - processing
 
 # number of simulations that reached epidemic size
-print "number of epidemics", len(d_epiincid)
+print "number of epidemics", sum([1 for key in d_epiresults if d_epiresults[key][0] > size_epi])
 
 ##############################################
 ### plot total simulation AR with SD bars for children, adults, toddlers and the elderly vs infectious period (1/gamma)

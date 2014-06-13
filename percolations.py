@@ -265,7 +265,9 @@ def episim_age_time_sickbehav(G, dict_node_age, beta, gamma, delay, cut, pop):
 				
 		# S to I
 		suscep_tstep = [u for u in states if states[u] == 's' and infected_neighbors(G, u, states) > 0]
-		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-beta*infected_neighbors_sickbehav(G, u, states, states_tstep, dict_node_age, delay, pop, cut)))]
+
+		new_infected = [u for u in suscep_tstep if rnd.random() < (1- np.exp(-beta*infected_neighbors_sickbehav(G, u, states, states_tstep, dict_node_age, delay, pop, cut, tstep)))]
+
 		for inf in new_infected:
 			I_tstep_savelist[int(inf)-1] = tstep
 
@@ -799,8 +801,8 @@ def infected_nonchild_neighbors(G, node, states, dict_node_age):
 	return sum([1 for node_i in G.neighbors(node) if states[node_i] == 'i' and dict_node_age[node_i] != '3'])
 
 ####################################################
-def infected_neighbors_sickbehav(G, node, states, states_tstep, dict_node_age, delay, pop, cut):
-	""" Calculate the number of infected neighbors for the node. Infected neighbors cannot infect work or school contacts after 'delay' number of days if they are adults or children, respectively. 'pop' parameter designates whether the simulation cuts these contacts for infected adults, children, or both. 'cut' parameter designates the proportion of contacts that are cut after 'delay' number of days has passed for infected adults/children with work/school contacts.
+def infected_neighbors_sickbehav(G, node, states, states_tstep, dict_node_age, delay, pop, cut, tstep):
+	""" Calculate the number of infected neighbors for the susceptible node. Infected neighbors cannot infect work or school contacts after 'delay' number of days if they are adults or children, respectively. 'pop' parameter designates whether the simulation cuts these contacts for infected adults, children, or both. 'cut' parameter designates the proportion of contacts that are cut after 'delay' number of days has passed for infected adults/children with work/school contacts.
 	"""
 	pop_options = ['A', 'C', 'AC', 'CA']
 	active_nonschoolwork, active_nonschool, active_schoolnonchild, active_schoolchilddelay, active_schoolchildpostdelay, active_nonwork, active_worknonadult, active_workadultdelay, active_workadultpostdelay = [],[],[],[],[],[],[],[],[]
@@ -811,30 +813,41 @@ def infected_neighbors_sickbehav(G, node, states, states_tstep, dict_node_age, d
 
 	elif pop == 'C':
 		active_nonschool = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] != 'S']
-		active_schoolnonchild = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] != 3] # school contact where infected neighbor is not a child
-		active_schoolchilddelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] < delay] # schoolchild may always infect at school before "delay" number of days has passed during infectious period 
-		active_schoolchildpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] >= delay and rnd.random() > cut] # schoolchild may infect at school after "delay" number of days "1-cut" proportion of the time; this is an approximation because the identity of the individuals that are staying home is not fixed
+		active_schoolnonchild = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] != '3'] # school contact where infected neighbor is not a child
+		active_schoolchilddelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == '3' and tstep - states_tstep[nei] < delay] # schoolchild may always infect at school before "delay" number of days has passed during infectious period 
+		active_schoolchildpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == '3' and tstep - states_tstep[nei] >= delay and rnd.random() > cut] # schoolchild may infect at school after "delay" number of days "1-cut" proportion of the time; this is an approximation because the identity of the individuals that are staying home is not fixed
 
 		if sorted(active_nonschool + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay) != sorted(set(active_nonschool + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay)):
 			print "pop C error" # check that neighbors were not double counted
 	
 	elif pop == 'A':
 		active_nonwork = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] != 'W']
-		active_worknonadult = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] != 4]
-		active_workadultdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] < delay]
-		active_workadultpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] >= delay and rnd.random() > cut] 
+		active_worknonadult = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] != '4']
+		active_workadultdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == '4' and tstep - states_tstep[nei] < delay]
+		active_workadultpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == '4' and tstep - states_tstep[nei] >= delay and rnd.random() > cut] 
 
 		if sorted(active_nonwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay) != sorted(set(active_nonwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay)):
 			print "pop A error"
 
 	else: # if pop == 'AC' or 'CA'
 		active_nonschoolwork = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] not in list('WS')] # neither school nor work infected contacts because conditions apply to both of those edge types
-		active_schoolnonchild = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] != 3] 
-		active_schoolchilddelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] < delay] 
-		active_schoolchildpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == 3 and tstep - states_tstep[nei] >= delay and rnd.random() > cut]
-		active_worknonadult = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] != 4]
-		active_workadultdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] < delay]
-		active_workadultpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == 4 and tstep - states_tstep[nei] >= delay and rnd.random() > cut] 
+		active_schoolnonchild = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] != '3'] 
+		active_schoolchilddelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == '3' and tstep - states_tstep[nei] < delay] 
+		active_schoolchildpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'S' and dict_node_age[nei] == '3' and tstep - states_tstep[nei] >= delay and rnd.random() > cut]
+		active_worknonadult = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] != '4']
+		active_workadultdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == '4' and tstep - states_tstep[nei] < delay]
+		active_workadultpostdelay = [nei for nei in active_neighbors if G.get_edge_data(node, nei)['place'] == 'W' and dict_node_age[nei] == '4' and tstep - states_tstep[nei] >= delay and rnd.random() > cut] 
+
+		# print 
+		# print 'node, node-age, nei, nei-age', node, dict_node_age[node],active_neighbors, [dict_node_age[nei] for nei in active_neighbors]
+		# print [G.get_edge_data(node, nei)['place'] for nei in active_neighbors]
+		# print 'nonschoolwork', active_nonschoolwork
+		# print 'schoolnonchild', active_schoolnonchild
+		# print 'schoolchilddelay', active_schoolchilddelay
+		# print 'schoolchildpostdelay', active_schoolchildpostdelay
+		# print 'worknonadult', active_worknonadult
+		# print 'workadultdelay', active_workadultdelay
+		# print 'workadultpostdelay', active_workadultpostdelay
 
 		if sorted(active_nonschoolwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay) != sorted(set(active_nonschoolwork + active_worknonadult + active_workadultdelay + active_workadultpostdelay + active_schoolnonchild + active_schoolchilddelay + active_schoolchildpostdelay)):
 			print "pop AC error"

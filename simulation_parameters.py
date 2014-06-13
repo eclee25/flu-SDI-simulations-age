@@ -46,7 +46,7 @@ dp_alignprop = 0.05 # align plots along "epidemic time," which means the time is
 ## base parameters ##
 pp_numsims = 800 # number of simulations
 pp_size_epi = 515 # threshold value that designates an epidemic in the network (5% of network)
-
+	
 ## disease parameters ##
 pp_inf_period = 5. # on avg, assume 5 day infectious period
 pp_gamma = 1/sp_inf_period # gamma = probability of recovery at each time step
@@ -59,7 +59,7 @@ pp_b = (-sp_T * sp_gamma)/(sp_T - 1) # T = beta / (beta + gamma)
 ### sick behavior plots ###
 pp_delay = 0 # days passed of infectious period before contacts are cut 
 pp_cut = 1. # proportion of random school/work contacts cut for children and adults, respectively, to represent the change in behavior
-pp_pop = "CA" # string of populations that cut contacts ("C" or "A" for children and adults)
+pp_pop = "C" # string of populations that cut contacts ("C" or "A" for children and adults)
 
 ### infectious period (recovery) sims ###
 pp_r1 = 3 # minimum infectious period length

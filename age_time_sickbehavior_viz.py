@@ -88,7 +88,7 @@ d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata
 print "processed", clock() - processing
 
 # number of simulations that reached epidemic size
-print "number of epidemics", len(d_epiincid)
+print "number of epidemics", sum([1 for key in d_epiresults if d_epiresults[key][0] > size_epi])
 
 ##############################################
 ### plot OR by time ###
