@@ -88,59 +88,67 @@ d_epiincid, d_epiOR, d_epiresults, d_epiAR, d_epiOR_filt = perc.recreate_epidata
 print "processed", clock() - processing
 
 # number of simulations that reached epidemic size
-print "number of epidemics", sum([1 for key in d_epiresults if d_epiresults[key][0] > size_epi])
+num_epi = sum([1 for key in d_epiresults if d_epiresults[key][0] > size_epi])
+print "number of epidemics", num_epi
 
-##############################################
-### plot OR by time ###
-# each epidemic sim is one line
-for key in d_epiOR:
-	plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
-plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-plt.xlabel('time step')
-plt.ylabel(par.pf_OR_lab)
-figname = 'Figures/epiOR_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
-plt.savefig(figname)
-plt.close()
-pp.compress_to_ziparchive(zipname, figname)
-# plt.show()
+#############################################
+## draw plots only if there are epidemics
+if num_epi: 
 
-##############################################
-### plot filtered OR by time ###
-# each sim is one line
-for key in d_epiOR_filt:
-	plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
-plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
-plt.xlabel('sim time step, 5-95% cum infections')
-plt.ylabel(par.pf_OR_lab)
-figname = 'Figures/epiORfilt_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
-plt.savefig(figname)
-plt.close()
-pp.compress_to_ziparchive(zipname, figname)
-# plt.show()
+	##############################################
+	### plot OR by time ###
+	# each epidemic sim is one line
+	for key in d_epiOR:
+		plt.plot(xrange(len(d_epiOR[key])), d_epiOR[key], marker = 'None', color = 'grey')
+	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
+	plt.xlabel('time step')
+	plt.ylabel(par.pf_OR_lab)
+	figname = 'Figures/epiOR_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
+	plt.savefig(figname)
+	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
+	# plt.show()
 
-##############################################
-### plot incidence by time ###
-# each sim is one line
-pl_ls = [key for key in d_epiincid if key[0] == code and key[2] == 'T']
-for key in pl_ls:
-	plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')	
-plt.xlabel('time step')
-plt.ylabel('number of new cases')
-figname = 'Figures/epiincid_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
-plt.savefig(figname)
-plt.close()
-pp.compress_to_ziparchive(zipname, figname)
-# plt.show()
+	##############################################
+	### plot filtered OR by time ###
+	# each sim is one line
+	for key in d_epiOR_filt:
+		plt.plot(xrange(len(d_epiOR_filt[key])), d_epiOR_filt[key], marker = 'None', color = 'grey')
+	plt.plot(xrange(250), [1] * 250, marker = 'None', color = 'red', linewidth = 2)
+	plt.xlabel('sim time step, 5-95% cum infections')
+	plt.ylabel(par.pf_OR_lab)
+	figname = 'Figures/epiORfilt_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
+	plt.savefig(figname)
+	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
+	# plt.show()
 
-##############################################
-### plot hist of episize by child recov value ###
-episize_data = [sum(d_epiincid[key]) for key in d_epiincid if key[2] == 'T']
-plt.hist(episize_data)
-plt.xlabel('epidemic size')
-plt.ylabel('frequency')
-figname = 'Figures/episize_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
-plt.savefig(figname)
-plt.close()
-pp.compress_to_ziparchive(zipname, figname)
-# plt.show()
+	##############################################
+	### plot incidence by time ###
+	# each sim is one line
+	pl_ls = [key for key in d_epiincid if key[0] == code and key[2] == 'T']
+	for key in pl_ls:
+		plt.plot(xrange(len(d_epiincid[key])), d_epiincid[key], marker = 'None', color = 'grey')	
+	plt.xlabel('time step')
+	plt.ylabel('number of new cases')
+	figname = 'Figures/epiincid_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
+	plt.savefig(figname)
+	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
+	# plt.show()
 
+	##############################################
+	### plot hist of episize by child recov value ###
+	episize_data = [sum(d_epiincid[key]) for key in d_epiincid if key[2] == 'T']
+	plt.hist(episize_data)
+	plt.xlabel('epidemic size')
+	plt.ylabel('frequency')
+	figname = 'Figures/episize_sickbehav_time_%ssims_beta%.3f_delay%s_cut%.2f_%spop.png' %(numsims, b, delay, cut, pop)
+	plt.savefig(figname)
+	plt.close()
+	pp.compress_to_ziparchive(zipname, figname)
+	# plt.show()
+
+
+else:
+	print "no epidemics to plot"

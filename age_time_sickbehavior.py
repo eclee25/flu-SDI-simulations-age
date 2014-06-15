@@ -113,3 +113,4 @@ pp.print_sorteddlist_to_file(d_save_R_tstep, filename, numsims)
 pp.compress_to_ziparchive(zipname, filename)
 
 print "total time for sims:", clock() - totaltime
+print "Params:", numsims, size_epi, inf_period, gamma, T, b, delay, cut, pop

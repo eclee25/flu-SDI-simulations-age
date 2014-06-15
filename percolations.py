@@ -238,26 +238,35 @@ def episim_age_time_sickbehav(G, dict_node_age, beta, gamma, delay, cut, pop):
 	# set initial conditions
 	states = dict([(node, 's') for node in G.nodes()]) # states[nodenumber] = state
 	states_tstep = dict([(node, 0) for node in G.nodes()]) # states_tstep[nodenumber] = tstep at which current state was achieved
-	# Randomly choose one node as patient zero
-	p_zero = rnd.choice(G.nodes()) 
-	states[p_zero] = 'i'
-	states_tstep[p_zero] = 0
-		
+	
+	# # Randomly choose one node as patient zero
+	# p_zero = rnd.choice(G.nodes()) 
+	# states[p_zero] = 'i'
+	# states_tstep[p_zero] = 0
+	# infected_tstep = [p_zero]
+
 	# keep track of infections over time
 	# time steps begin at 0
 	tstep = 0
-	infected_tstep = [p_zero]
 	
 	# number of nodes in graph
 	N = int(G.order())
-	
+
 	# record infection timestep for patient zero
 	# node 1 will be in column index 0 (nodes number from 1 to 10304)
 	I_tstep_savelist = [0] * N
-	I_tstep_savelist[int(p_zero)-1] = tstep 
-	
 	# create list to record recovery timesteps
 	R_tstep_savelist = [0] * N
+
+	# Randomly choose seed infections
+	p_zero = list(rnd.sample(G.nodes(), 10))
+	for p in p_zero:
+		states[p] = 'i'
+		states_tstep[p] = tstep
+		I_tstep_savelist[int(p)-1] = tstep
+	
+	infected_tstep = p_zero[:]
+	
 
 ### simulation ###
 	while infected_tstep:

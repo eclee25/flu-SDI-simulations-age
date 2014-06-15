@@ -25,9 +25,9 @@ sp_b = (-sp_T * sp_gamma)/(sp_T - 1) # T = beta / (beta + gamma)
 # when T = 0.075 and gamma = 1/5, b = 0.0162
 
 ### sick behavior sims ###
-sp_delay = 0 # days passed of infectious period before contacts are cut 
-sp_cut = 1. # proportion of random school/work contacts cut for children and adults, respectively, to represent the change in behavior
-sp_pop = "CA" # string of populations that cut contacts ("C" or "A" for children and adults at school and work, respectively)
+sp_delay = 1 # days passed of infectious period before contacts are cut 
+sp_cut = 0.3 # proportion of random school/work contacts cut for children and adults, respectively, to represent the change in behavior
+sp_pop = "C" # string of populations that cut contacts ("C" or "A" for children and adults at school and work, respectively)
 
 ### infectious period (recovery) sims ###
 sp_r1 = 3 # minimum infectious period length
@@ -57,8 +57,8 @@ pp_b = (-sp_T * sp_gamma)/(sp_T - 1) # T = beta / (beta + gamma)
 # when T = 0.075 and gamma = 1/5, b = 0.0162
 
 ### sick behavior plots ###
-pp_delay = 0 # days passed of infectious period before contacts are cut 
-pp_cut = 1. # proportion of random school/work contacts cut for children and adults, respectively, to represent the change in behavior
+pp_delay = 1 # days passed of infectious period before contacts are cut 
+pp_cut = 0.3 # proportion of random school/work contacts cut for children and adults, respectively, to represent the change in behavior
 pp_pop = "C" # string of populations that cut contacts ("C" or "A" for children and adults)
 
 ### infectious period (recovery) sims ###
